@@ -1,0 +1,16 @@
+target/
+
+### IntelliJ IDEA ###
+.idea/*
+
+### VS Code ###
+.vscode/
+.bloop
+.metals
+metals.sbt
+
+### Mac OS ###
+.DS_Store
+
+### Scala ###
+.bsp/

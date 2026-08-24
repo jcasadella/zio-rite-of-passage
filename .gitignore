@@ -14,3 +14,9 @@ metals.sbt
 
 ### Scala ###
 .bsp/
+
+### Node ###
+node_modules/
+package-lock.json
+dist/
+.parcel-cache/

@@ -31,8 +31,7 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         CompanyRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       ),
       test("create a duplicate should fail") {
         val program = for {
@@ -44,8 +43,7 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         CompanyRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       ),
       test("get by id and slug") {
         val program = for {
@@ -65,8 +63,7 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         CompanyRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       ),
       test("update record") {
         val program = for {
@@ -89,8 +86,7 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         CompanyRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       ),
       test("delete record") {
         val program = for {
@@ -106,8 +102,7 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         CompanyRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       ),
       test("get all") {
         val program = for {
@@ -123,8 +118,7 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         CompanyRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       )
     )
 }

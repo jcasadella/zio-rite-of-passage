@@ -17,10 +17,9 @@ final case class CreateCompanyRequest(
   }
 }
 
-
 object CreateCompanyRequest {
-  import zio.json.JsonCodec
   import zio.json.DeriveJsonCodec
+  import zio.json.JsonCodec
 
   given codec: JsonCodec[CreateCompanyRequest] = DeriveJsonCodec.gen[CreateCompanyRequest]
 }

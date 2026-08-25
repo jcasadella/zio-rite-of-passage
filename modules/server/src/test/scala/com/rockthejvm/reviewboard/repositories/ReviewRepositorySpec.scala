@@ -57,8 +57,7 @@ object ReviewRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         ReviewRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       ),
       test("get review by ids (id, companyId, userId)") {
         for {
@@ -76,8 +75,7 @@ object ReviewRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         ReviewRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       ),
       test("get all") {
         for {
@@ -95,8 +93,7 @@ object ReviewRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         ReviewRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       ),
       test("edit review") {
         for {
@@ -113,8 +110,7 @@ object ReviewRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         ReviewRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       ),
       test("delete review") {
         for {
@@ -126,8 +122,7 @@ object ReviewRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       }.provide(
         ReviewRepositoryLive.layer,
         datasourceLayer,
-        Repository.quillLayer,
-        Scope.default
+        Repository.quillLayer
       )
     ) @@ TestAspect.sequential
 }

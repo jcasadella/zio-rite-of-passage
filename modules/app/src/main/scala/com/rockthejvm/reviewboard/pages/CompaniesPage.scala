@@ -1,28 +1,29 @@
 package com.rockthejvm.reviewboard.pages
 
+import zio.*
+
 import com.rockthejvm.reviewboard.common.Constants
 import com.rockthejvm.reviewboard.components.Anchors
+import com.rockthejvm.reviewboard.components.FilterPanel
+import com.rockthejvm.reviewboard.core.ZioLaminar.*
 import com.rockthejvm.reviewboard.domain.data.Company
+import com.rockthejvm.reviewboard.http.endpoints.CompanyEndpoints
 
 import com.raquo.laminar.api.L.{*, given}
 import org.scalajs.dom
 
 object CompaniesPage {
 
-  val dummyCompany = Company(
-    1L,
-    "dummy-company",
-    "Dummy Compant",
-    "http://dummy.com",
-    Some("Anywhere"),
-    Some("Mars"),
-    Some("Space travel"),
-    None,
-    List("space", "scala")
-  )
+  val companiesBus = EventBus[List[Company]]()
+
+  def performBackendCall(): Unit = {
+    val companiesZio = useBackend(_.companies.getAllEndpoint(()))
+    companiesZio.emitTo(companiesBus)
+  }
 
   def apply() =
     sectionTag(
+      onMountCallback(- => performBackendCall()),
       cls := "section-1",
       div(
         cls := "container company-list-hero",
@@ -37,13 +38,9 @@ object CompaniesPage {
           cls := "row jvm-recent-companies-body",
           div(
             cls := "col-lg-4",
-            div("TODO filter panel here")
+            FilterPanel()
           ),
-          div(
-            cls := "col-lg-8",
-            renderCompany(dummyCompany),
-            renderCompany(dummyCompany)
-          )
+          div(cls := "col-lg-8", children <-- companiesBus.events.map(_.map(renderCompany)))
         )
       )
     )

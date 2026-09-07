@@ -4,6 +4,7 @@ import zio.*
 import zio.http.Server
 
 import sttp.tapir.*
+import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 
@@ -19,7 +20,9 @@ object Application extends ZIOAppDefault {
     _         <- Console.printLine(endpoints.map(_.show).mkString("\n"))
     _ <- Server.serve(
       ZioHttpInterpreter(
-        ZioHttpServerOptions.default // can add configs e.g. CORS
+        ZioHttpServerOptions.default.appendInterceptor(
+          CORSInterceptor.default
+        )
       ).toHttp(endpoints)
     )
     _ <- Console.printLine("Rock the JVM!")

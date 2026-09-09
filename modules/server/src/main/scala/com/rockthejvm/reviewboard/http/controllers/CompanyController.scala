@@ -39,7 +39,18 @@ class CompanyController private (service: CompanyService, jwtService: JwtService
         .either
     }
 
-  override val routes: List[ServerEndpoint[Any, Task]] = List(create, getAll, getById)
+  val allFilters: ServerEndpoint[Any, Task] =
+    allFiltersEndpoint.serverLogic { _ =>
+      service.allFilters.either
+    }
+
+  val search: ServerEndpoint[Any, Task] =
+    searchEndpoint.serverLogic { filter =>
+      service.search(filter).either
+    }
+
+  override val routes: List[ServerEndpoint[Any, Task]] =
+    List(allFilters, search, create, getAll, getById)
 }
 
 object CompanyController {

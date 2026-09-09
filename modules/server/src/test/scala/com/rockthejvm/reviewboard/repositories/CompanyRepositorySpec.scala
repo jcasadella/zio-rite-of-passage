@@ -6,11 +6,28 @@ import zio.*
 import zio.test.*
 
 import com.rockthejvm.reviewboard.domain.data.Company
+import com.rockthejvm.reviewboard.domain.data.CompanyFilter
 import com.rockthejvm.reviewboard.syntax.*
 
 object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
 
   val rtjvm = Company(1L, "rock-the-jvm", "Rock the JVM", "rockthejvm.com")
+
+  private def genString() =
+    scala.util.Random.alphanumeric.take(8).mkString
+
+  private def genCompany(): Company =
+    Company(
+      id = -1L,
+      slug = genString(),
+      name = genString(),
+      url = genString(),
+      location = Some(genString()),
+      country = Some(genString()),
+      industry = Some(genString()),
+      image = None,
+      tags = List(genString(), genString(), genString())
+    )
 
   override val initScript: String = "sql/companies.sql"
 
@@ -114,6 +131,19 @@ object CompanyRepositorySpec extends ZIOSpecDefault with RepositorySpec {
         program.assert {
           case None => true
           case _    => false
+        }
+      }.provide(
+        CompanyRepositoryLive.layer,
+        datasourceLayer,
+        Repository.quillLayer
+      ),
+      test("search by tag") {
+        for {
+          repo    <- ZIO.service[CompanyRepository]
+          company <- repo.create(genCompany())
+          fetched <- repo.search(CompanyFilter(tags = List(company.tags.head)))
+        } yield assertTrue {
+          fetched.nonEmpty && fetched.tail.isEmpty && fetched.head == company
         }
       }.provide(
         CompanyRepositoryLive.layer,

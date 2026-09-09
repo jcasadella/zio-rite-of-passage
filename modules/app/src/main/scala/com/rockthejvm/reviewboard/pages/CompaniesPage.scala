@@ -14,16 +14,18 @@ import org.scalajs.dom
 
 object CompaniesPage {
 
-  val companiesBus = EventBus[List[Company]]()
+  val filterPanel = new FilterPanel
 
-  def performBackendCall(): Unit = {
-    val companiesZio = useBackend(_.companies.getAllEndpoint(()))
-    companiesZio.emitTo(companiesBus)
+  val companyEvents: EventStream[List[Company]] = {
+    useBackend(_.companies.getAllEndpoint(())).toEventStream.mergeWith {
+      filterPanel.triggerFilters.flatMap { newFilter =>
+        useBackend(_.companies.searchEndpoint(newFilter)).toEventStream
+      }
+    }
   }
 
   def apply() =
     sectionTag(
-      onMountCallback(- => performBackendCall()),
       cls := "section-1",
       div(
         cls := "container company-list-hero",
@@ -38,9 +40,9 @@ object CompaniesPage {
           cls := "row jvm-recent-companies-body",
           div(
             cls := "col-lg-4",
-            FilterPanel()
+            filterPanel()
           ),
-          div(cls := "col-lg-8", children <-- companiesBus.events.map(_.map(renderCompany)))
+          div(cls := "col-lg-8", children <-- companyEvents.map(_.map(renderCompany)))
         )
       )
     )

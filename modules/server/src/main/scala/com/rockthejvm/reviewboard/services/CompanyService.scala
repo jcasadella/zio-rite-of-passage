@@ -1,6 +1,7 @@
 package com.rockthejvm.reviewboard.services
 
 import com.rockthejvm.reviewboard.domain.data.Company
+import com.rockthejvm.reviewboard.domain.data.CompanyFilter
 import com.rockthejvm.reviewboard.http.requests.CreateCompanyRequest
 import com.rockthejvm.reviewboard.repositories.CompanyRepository
 import zio.*
@@ -12,6 +13,8 @@ trait CompanyService {
   def getAll: Task[List[Company]]
   def getById(id: Long): Task[Option[Company]]
   def getBySlug(slug: String): Task[Option[Company]]
+  def allFilters: Task[CompanyFilter]
+  def search(filter: CompanyFilter): Task[List[Company]]
 }
 
 class CompanyServiceLive private (repository: CompanyRepository) extends CompanyService {
@@ -23,6 +26,12 @@ class CompanyServiceLive private (repository: CompanyRepository) extends Company
     repository.getById(id)
   override def getBySlug(slug: String): Task[Option[Company]] =
     repository.getBySlug(slug)
+
+  override def allFilters: Task[CompanyFilter] =
+    repository.uniqueAttribues
+  
+  override def search(filter: CompanyFilter): Task[List[Company]] =
+    repository.search(filter)
 }
 
 object CompanyServiceLive {

@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS companies (
     tags TEXT[]
 );
 
+CREATE INDEX idx_companies_tags_gin ON companies USING GIN (tags);
+
 CREATE TABLE IF NOT EXISTS reviews
 (
     id BIGSERIAL PRIMARY KEY,

@@ -18,7 +18,8 @@ object ZioLaminar {
 
   def useBackend = ZIO.serviceWithZIO[BackendClient]
 
-  extension [E <: Throwable, A](zio: ZIO[BackendClient, E, A])
+  extension [E <: Throwable, A](zio: ZIO[BackendClient, E, A]) {
+
     def emitTo(eventBus: EventBus[A]) =
       Unsafe.unsafe { implicit unsafe =>
         Runtime.default.unsafe.fork(
@@ -27,6 +28,18 @@ object ZioLaminar {
             .provide(BackendClientLive.configuredLayer)
         )
       }
+
+    def toEventStream: EventStream[A] = {
+      val bus = EventBus[A]()
+      emitTo(bus)
+      bus.events
+    }
+
+    def runJs =
+      Unsafe.unsafe { implicit unsafe =>
+        Runtime.default.unsafe.runToFuture(zio.provide(BackendClientLive.configuredLayer))
+      }
+  }
 
   extension [I, E <: Throwable, O](endpoint: Endpoint[Unit, I, E, O, Any])
     def apply(payload: I): Task[O] =

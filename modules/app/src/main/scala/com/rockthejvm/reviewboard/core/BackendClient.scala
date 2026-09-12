@@ -2,6 +2,7 @@ package com.rockthejvm.reviewboard.core
 
 import com.rockthejvm.reviewboard.config.BackendClientConfig
 import com.rockthejvm.reviewboard.http.endpoints.CompanyEndpoints
+import com.rockthejvm.reviewboard.http.endpoints.UserEndpoints
 import sttp.capabilities.WebSockets
 import sttp.capabilities.zio.ZioStreams
 import sttp.client3.*
@@ -12,6 +13,7 @@ import zio.*
 
 trait BackendClient {
   val companies: CompanyEndpoints
+  val user: UserEndpoints
 
   def endpointRequestZio[I, E <: Throwable, O](endpoint: Endpoint[Unit, I, E, O, Any])(payload: I): Task[O]
 }
@@ -22,6 +24,7 @@ class BackendClientLive(
     config: BackendClientConfig
   ) extends BackendClient {
       override val companies: CompanyEndpoints = new CompanyEndpoints {}
+      override val user: UserEndpoints = new UserEndpoints {}
       private def endpointRequest[I, E, O](
         endpoint: Endpoint[Unit, I, E, O, Any]
       ): I => Request[Either[E, O], Any] =

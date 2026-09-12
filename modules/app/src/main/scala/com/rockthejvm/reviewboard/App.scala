@@ -3,6 +3,7 @@ package com.rockthejvm.reviewboard
 import scala.util.Try
 
 import com.rockthejvm.reviewboard.components.*
+import com.rockthejvm.reviewboard.core.Session
 
 import com.raquo.airstream.ownership.OneTimeOwner
 import com.raquo.laminar.api.L.{*, given}
@@ -12,6 +13,7 @@ import org.scalajs.dom
 object App {
 
   val appDiv = div(
+    onMountCallback(_ => Session.loadUserState()),
     Header(),
     Router()
   ).amend(LinkHandler.bind) // internal links adapted to URL changes

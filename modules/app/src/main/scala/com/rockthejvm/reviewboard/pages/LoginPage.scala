@@ -67,7 +67,8 @@ object LoginPage extends FormPage[LoginState]("Log In") {
       "password",
       true,
       "Your password",
-      (s, p) => s.copy(password = p, showStatus = false, upstreamError = None)
+      (s, p) => s.copy(password = p, showStatus = false, upstreamError = None),
+      maybeAutoComplete = Some("current-password")
     ),
     button(
       `type` := "button",

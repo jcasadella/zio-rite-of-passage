@@ -78,7 +78,8 @@ abstract class FormPage[S <: FormState](title: String) {
       kind: String,
       isRequired: Boolean,
       plcHolder: String,
-      updateFn: (S, String) => S
+      updateFn: (S, String) => S,
+      maybeAutoComplete: Option[String] = None
   ) =
     div(
       cls := "row",
@@ -97,6 +98,7 @@ abstract class FormPage[S <: FormState](title: String) {
             cls         := "form-control",
             idAttr      := uid,
             placeholder := plcHolder,
+            autoComplete := maybeAutoComplete.getOrElse(""),
             onInput.mapToValue --> stateVar.updater(updateFn)
           )
         )

@@ -32,4 +32,9 @@ object Session {
       Storage.get[UserToken](stateKey)
     )
   }
+
+  def clearUserState(): Unit = {
+    Storage.remove(stateKey)
+    userState.set(Option.empty)
+  }
 }

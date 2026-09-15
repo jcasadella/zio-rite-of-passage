@@ -3,6 +3,7 @@ package com.rockthejvm.reviewboard.pages
 import zio.*
 
 import com.rockthejvm.reviewboard.common.Constants
+import com.rockthejvm.reviewboard.components.Anchors
 import com.rockthejvm.reviewboard.core.*
 import com.rockthejvm.reviewboard.core.ZioLaminar.*
 import com.rockthejvm.reviewboard.http.requests.LoginRequest
@@ -29,7 +30,7 @@ case class LoginState(
 
 object LoginPage extends FormPage[LoginState]("Log In") {
 
-  override val stateVar: Var[LoginState] = Var(LoginState())
+  override def basicState: LoginState = LoginState()
 
   val submitter = Observer[LoginState] { state =>
     if (state.hasErrors) {
@@ -74,6 +75,11 @@ object LoginPage extends FormPage[LoginState]("Log In") {
       `type` := "button",
       "Log In",
       onClick.preventDefault.mapTo(stateVar.now()) --> submitter
+    ),
+    Anchors.renderNavLink(
+      "Forgot password?",
+      "/forgot",
+      "auth-link"
     )
   )
 }

@@ -1,5 +1,7 @@
 package com.rockthejvm.reviewboard.core
 
+import scala.annotation.targetName
+
 import zio.*
 
 import sttp.capabilities.WebSockets
@@ -37,7 +39,7 @@ object ZioLaminar {
 
     def runJs =
       Unsafe.unsafe { implicit unsafe =>
-        Runtime.default.unsafe.runToFuture(zio.provide(BackendClientLive.configuredLayer))
+        Runtime.default.unsafe.fork(zio.provide(BackendClientLive.configuredLayer))
       }
   }
 
@@ -46,5 +48,13 @@ object ZioLaminar {
       ZIO
         .service[BackendClient]
         .flatMap(_.endpointRequestZio(endpoint)(payload))
+        .provide(BackendClientLive.configuredLayer)
+
+  extension [I, E <: Throwable, O](endpoint: Endpoint[String, I, E, O, Any])
+    @targetName("applySecure")
+    def apply(payload: I): Task[O] =
+      ZIO
+        .service[BackendClient]
+        .flatMap(_.secureEndpointRequestZio(endpoint)(payload))
         .provide(BackendClientLive.configuredLayer)
 }

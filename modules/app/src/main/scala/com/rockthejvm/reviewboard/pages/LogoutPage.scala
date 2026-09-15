@@ -18,12 +18,12 @@ case class LogoutState() extends FormState {
 }
 
 object LogoutPage extends FormPage[LogoutState]("Log Out") {
-  override val stateVar: Var[LogoutState] = Var(LogoutState())
+  override def basicState: LogoutState = LogoutState()
 
   override def renderChildren(): List[ReactiveHtmlElement[Element]] = List(
     div(
       onMountCallback(_ => Session.clearUserState()),
-      cls := "logout-status",
+      cls := "centered-text",
       "You have been successfully logged out."
     )
   )

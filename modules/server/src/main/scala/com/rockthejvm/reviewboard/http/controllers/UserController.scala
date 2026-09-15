@@ -28,7 +28,7 @@ class UserController private (userService: UserService, jwtService: JwtService)
     .serverLogic { req =>
       userService
         .generateToken(req.email, req.password)
-        .someOrFail(UnauthorizedException)
+        .someOrFail(UnauthorizedException("Email or password incorrect."))
         .either
     }
 
@@ -59,7 +59,7 @@ class UserController private (userService: UserService, jwtService: JwtService)
     .serverLogic { req =>
       userService
         .recoverPasswordFromToken(req.email, req.token, req.newPassword)
-        .filterOrFail(b => b)(UnauthorizedException)
+        .filterOrFail(b => b)(UnauthorizedException("The email/token combination is invalid."))
         .unit
         .either
     }

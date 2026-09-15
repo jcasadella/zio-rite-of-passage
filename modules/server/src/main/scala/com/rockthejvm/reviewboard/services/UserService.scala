@@ -2,6 +2,7 @@ package com.rockthejvm.reviewboard.services
 
 import cats.kernel.instances.hash
 import com.rockthejvm.reviewboard.domain.data.*
+import com.rockthejvm.reviewboard.domain.errors.UnauthorizedException
 import com.rockthejvm.reviewboard.repositories.RecoveryTokensRepository
 import com.rockthejvm.reviewboard.repositories.UserRepository
 import zio.*
@@ -48,7 +49,7 @@ class UserServiceLive private (
     for {
       existingUser <- userRepository
         .getByEmail(email)
-        .someOrFail(new NoSuchElementException(s"User with email $email not found"))
+        .someOrFail(UnauthorizedException(s"User with email $email not found"))
       verified <- hashService.verify(password, existingUser.hashedPassword)
       maybeToken <- jwtService.createToken(existingUser).when(verified)
     } yield maybeToken
@@ -57,7 +58,7 @@ class UserServiceLive private (
   override def updatePassword(email: String, oldPassword: String, newPassword: String): Task[User] =
     for {
       existingUser <- userRepository.getByEmail(email)
-      .someOrFail(new NoSuchElementException(s"User with email $email not found"))
+      .someOrFail(UnauthorizedException(s"User with email $email not found"))
       verified <- hashService.verify(oldPassword, existingUser.hashedPassword)
       newHash <- hashService.hash(newPassword)
       updatedUser <- userRepository.update(
@@ -70,7 +71,7 @@ class UserServiceLive private (
   override def delete(email: String, password: String): Task[User] =
     for {
       existingUser <- userRepository.getByEmail(email)
-      .someOrFail(new NoSuchElementException(s"User with email $email not found"))
+      .someOrFail(UnauthorizedException(s"User with email $email not found"))
       verified <- hashService.verify(password, existingUser.hashedPassword)
       updatedUser <- userRepository.delete(existingUser.id).when(verified)
       .someOrFail(new RuntimeException(s"Could not delete user $email"))

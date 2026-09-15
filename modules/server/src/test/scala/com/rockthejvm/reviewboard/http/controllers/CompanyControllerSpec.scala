@@ -55,7 +55,7 @@ object CompanyControllerSpec extends ZIOSpecDefault {
 
   private val jwtServiceStub = new JwtService {
     override def createToken(user: User): Task[UserToken] =
-      ZIO.succeed(UserToken(user.email, "AL_IS_GOOD", 999999L))
+      ZIO.succeed(UserToken(user.id, user.email, "AL_IS_GOOD", 999999L))
     override def verifyToken(token: String): Task[UserId] =
       ZIO.succeed(UserId(1, "me@rockthejvm.com"))
   }

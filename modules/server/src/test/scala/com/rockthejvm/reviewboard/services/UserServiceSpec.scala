@@ -6,6 +6,7 @@ import zio.test.*
 import com.rockthejvm.reviewboard.domain.data.User
 import com.rockthejvm.reviewboard.domain.data.UserId
 import com.rockthejvm.reviewboard.domain.data.UserToken
+import com.rockthejvm.reviewboard.domain.errors.UnauthorizedException
 import com.rockthejvm.reviewboard.repositories.RecoveryTokensRepository
 import com.rockthejvm.reviewboard.repositories.UserRepository
 
@@ -70,7 +71,7 @@ object UserServiceSpec extends ZIOSpecDefault {
   val stubJwtLayer = ZLayer.succeed {
     new JwtService {
       override def createToken(user: User): Task[UserToken] =
-        ZIO.succeed(UserToken(user.email, "dummy-token", 60))
+        ZIO.succeed(UserToken(user.id, user.email, "dummy-token", 60))
 
       override def verifyToken(token: String): Task[UserId] =
         ZIO.attempt {
@@ -119,7 +120,7 @@ object UserServiceSpec extends ZIOSpecDefault {
         for {
           service <- ZIO.service[UserService]
           err     <- service.delete("someone@gmail.com", "someOtherPassword").flip
-        } yield assertTrue(err.isInstanceOf[NoSuchElementException])
+        } yield assertTrue(err.isInstanceOf[UnauthorizedException])
       },
       test("delete user with incorrect credentials should fail") {
         for {

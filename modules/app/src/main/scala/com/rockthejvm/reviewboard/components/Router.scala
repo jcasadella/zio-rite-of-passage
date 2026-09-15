@@ -36,6 +36,9 @@ object Router {
           path("post") {
             CreateCompanyPage()
           },
+          path("company" / segment) { companySlug =>
+            CompanyPage(companySlug)
+          },
           noneMatched {
             NotFoundPage()
           }

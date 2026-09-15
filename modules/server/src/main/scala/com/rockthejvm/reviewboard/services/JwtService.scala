@@ -38,7 +38,7 @@ class JwtServiceLive (jwtConfig: JwtConfig, clock: java.time.Clock) extends JwtS
         .withClaim(Claim_Username, user.email)
         .sign(algorithm)
       )
-    } yield UserToken(user.email, token, expiration.getEpochSecond())
+    } yield UserToken(user.id, user.email, token, expiration.getEpochSecond())
 
 
   override def verifyToken(token: String): Task[UserId] = for {

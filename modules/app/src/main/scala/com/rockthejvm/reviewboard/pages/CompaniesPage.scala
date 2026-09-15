@@ -4,6 +4,7 @@ import zio.*
 
 import com.rockthejvm.reviewboard.common.Constants
 import com.rockthejvm.reviewboard.components.Anchors
+import com.rockthejvm.reviewboard.components.CompanyComponents
 import com.rockthejvm.reviewboard.components.FilterPanel
 import com.rockthejvm.reviewboard.core.ZioLaminar.*
 import com.rockthejvm.reviewboard.domain.data.Company
@@ -50,38 +51,6 @@ object CompaniesPage {
       )
     )
 
-  private def renderCompanyPicture(company: Company) =
-    img(
-      cls := "img-fluid",
-      src := company.image.getOrElse(Constants.genericCompanyImage),
-      alt := company.name
-    )
-
-  private def renderDetail(icon: String, value: String) =
-    div(
-      cls := "company-detail",
-      i(cls := s"fa fa-$icon company-detail-icon"),
-      p(
-        cls := "company-detail-value",
-        value
-      )
-    )
-
-  private def fullLocationString(company: Company): String =
-    (company.location, company.country) match {
-      case (Some(location), Some(country)) => s"$location, $country"
-      case (Some(location), None)          => location
-      case (None, Some(country))           => country
-      case (None, None)                    => "N/A"
-    }
-
-  private def renderOverview(company: Company) =
-    div(
-      cls := "company-summary",
-      renderDetail("location-dot", fullLocationString(company)),
-      renderDetail("tags", company.tags.mkString(", "))
-    )
-
   private def renderAction(company: Company) =
     div(
       cls := "jvm-recent-companies-card-btn-apply",
@@ -101,7 +70,7 @@ object CompaniesPage {
       cls := "jvm-recent-companies-cards",
       div(
         cls := "jvm-recent-companies-card-img",
-        renderCompanyPicture(company)
+        CompanyComponents.renderCompanyPicture(company)
       ),
       div(
         cls := "jvm-recent-companies-card-contents",
@@ -112,7 +81,7 @@ object CompaniesPage {
             "company-title-link"
           )
         ),
-        renderOverview(company),
+        CompanyComponents.renderOverview(company),
         renderAction(company)
       )
     )

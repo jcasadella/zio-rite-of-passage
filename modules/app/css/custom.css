@@ -2,3 +2,7 @@
 .centered-text {
   text-align: center;
 }
+
+.add-review-cancel {
+  margin: 0 2rem;
+}

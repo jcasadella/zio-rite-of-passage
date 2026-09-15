@@ -33,6 +33,9 @@ object Router {
           path("recover") {
             RecoverPasswordPage()
           },
+          path("post") {
+            CreateCompanyPage()
+          },
           noneMatched {
             NotFoundPage()
           }

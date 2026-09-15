@@ -1,18 +1,21 @@
 package com.rockthejvm.reviewboard.pages
 
+import com.raquo.laminar.DomApi
 import com.raquo.laminar.api.L.{*, given}
 import com.rockthejvm.reviewboard.common.Constants
 import com.rockthejvm.reviewboard.components.AddReviewCard
 import com.rockthejvm.reviewboard.components.CompanyComponents
+import com.rockthejvm.reviewboard.components.Markdown
+import com.rockthejvm.reviewboard.components.Time
 import com.rockthejvm.reviewboard.core.Session
 import com.rockthejvm.reviewboard.core.ZioLaminar.*
 import com.rockthejvm.reviewboard.domain.data.Company
 import com.rockthejvm.reviewboard.domain.data.Review
 import com.rockthejvm.reviewboard.domain.data.UserToken
+import org.scalajs.dom
 import zio.*
 
 import java.time.Instant
-// import org.scalajs.dom.*
 
 object CompanyPage {
 
@@ -150,7 +153,7 @@ object CompanyPage {
       cls := "container",
       div(
         cls := "markdown-body overview-section",
-        // TODO add a highlight if this is "your" review
+        cls.toggle("review-highlighted") <-- Session.userState.signal.map(_.exists(_.id == review.userId)),
         div(
           cls := "company-description",
           div(
@@ -161,12 +164,11 @@ object CompanyPage {
             renderReviewDetail("Salary", review.salary),
             renderReviewDetail("Benefits", review.benefits)
           ),
-          // TODO parse this Markdown
-          div(
-            cls := "review-content",
-            review.review
-          ),
-          div(cls := "review-posted", "Posted (TODO) a million years ago")
+          injectMarkdown(review),
+          div(cls := "review-posted", s"Posted ${Time.unix2hr(review.created.toEpochMilli())}"),
+          child.maybe <-- Session.userState.signal
+            .map(_.filter(_.id == review.userId))
+            .map(_.map(_ => div(cls := "review-posted", "Your Review")))
         )
       )
     )
@@ -195,5 +197,17 @@ object CompanyPage {
         case PageStatus.NotFound => List(div("Company not found"))
         case PageStatus.Found(company) => render(company)
       }
+    )
+  
+  def injectMarkdown(review: Review) =
+    div(
+      cls:= "review-content",
+      DomApi
+        .unsafeParseHtmlStringIntoNodeArray(Markdown.toHtml(review.review))
+        .map {
+          case t: dom.Text => span(t.data)
+          case e: dom.html.Element => foreignHtmlElement(e)
+          case _ => emptyNode
+        }
     )
 }

@@ -1,5 +1,7 @@
 # ZIO Rite of Passage
 
+[![Scala CI](https://github.com/jcasadella/zio-rite-of-passage/actions/workflows/scala-ci.yaml/badge.svg?branch=main)](https://github.com/jcasadella/zio-rite-of-passage/actions/workflows/scala-ci.yaml)
+
 Review Board application built with Scala 3, ZIO, Scala.js, Laminar, Parcel, and PostgreSQL.
 
 Project created from the [Rock the JVM](https://rockthejvm.com/) course of the same name.
@@ -60,24 +62,10 @@ Run the development linker from the repository root:
 sbt "app / Compile / fastLinkJS"
 ```
 
-`fastLinkJS` is the current Scala.js name for the fast development build. In this project, the equivalent legacy command is:
-
-```bash
-sbt "app / Compile / fastOptJS"
-```
-
-Both commands produce the frontend JavaScript under `modules/app/target/scala-3.5.0/`, including `app-fastopt.js`, which is referenced by `modules/app/index.html`.
-
 For an optimized production build, use:
 
 ```bash
 sbt "app / Compile / fullLinkJS"
-```
-
-The equivalent legacy command is:
-
-```bash
-sbt "app / Compile / fullOptJS"
 ```
 
 The production output is generated under `modules/app/target/scala-3.5.0/`, including `app-opt.js`.

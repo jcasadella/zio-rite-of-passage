@@ -7,6 +7,7 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 ThisBuild / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+ThisBuild / libraryDependencySchemes += "dev.zio" %% "zio-json" % "always"
 
 val zioVersion        = "2.1.26"
 val zioJsonVersion    = "0.9.2"

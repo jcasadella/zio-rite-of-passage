@@ -97,9 +97,12 @@ object ReviewRepositorySpec extends ZIOSpecDefault with RepositorySpec {
       ),
       test("edit review") {
         for {
-          repo    <- ZIO.service[ReviewRepository]
-          review  <- repo.create(goodReview)
-          updated <- repo.update(review.id, _.copy(review = "Updated review"))
+          repo   <- ZIO.service[ReviewRepository]
+          review <- repo.create(goodReview)
+          updated <- repo.update(
+            review.id,
+            _.copy(review = "Updated review", updated = java.time.Instant.now())
+          )
         } yield assertTrue(
           updated.review == "Updated review" &&
             updated.id == review.id &&

@@ -11,6 +11,7 @@ import javax.mail.PasswordAuthentication
 import javax.mail.Session
 import javax.mail.Transport
 import javax.mail.internet.MimeMessage
+import com.rockthejvm.reviewboard.domain.data.Company
 
 trait EmailService {
   def sendEmail(to: String, subject: String, content: String): Task[Unit]
@@ -26,6 +27,30 @@ trait EmailService {
     ">
       <h1>Rock the JVM: Password Recovery</h1>
       <p>Your password recovery token is: <strong>$token</strong></p>
+      <p>😘 from Rock the JVM</p>
+    </div>
+    """
+    sendEmail(to, subject, content)
+  }
+
+  def sendReviewInvite(from: String, to: String, company: Company): Task[Unit] = {
+    val subject = s"Rock the JVM: Invitation to review ${company.name}"
+    val content = s"""
+    <div style="
+      border: 1px solid black;
+      padding: 20px;
+      font-family: sans-serif;
+      line-height: 2;
+      font-size: 20px;
+    ">
+      <h1>You're invited to review ${company.name}</h1>
+      <p>
+        Go to
+        <a href="http://localhost:1234/company/${company.slug}">this link</a>
+        to add your thoughts on the app.
+        <br/>
+        Should take just a minute.
+      </p>
       <p>😘 from Rock the JVM</p>
     </div>
     """

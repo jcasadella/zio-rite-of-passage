@@ -43,3 +43,22 @@ CREATE TABLE IF NOT EXISTS recovery_tokens
     token TEXT NOT NULL,
     expiration BIGINT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS invites
+(
+    id BIGSERIAL PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    company_id BIGINT NOT NULL,
+    n_invites INT NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT false
+);
+
+ALTER TABLE invites
+ADD CONSTRAINT uq_company_user_email UNIQUE (company_id, user_email);
+
+-- dummy data
+insert into companies(id, slug, name, url, location, country, industry, tags)
+values (1, 'rock-the-jvm', 'Rock the JVM', 'https://rockthejvm.com', 'Bucharest', 'Romania', 'Teaching', '{"scala", "zio"}');
+
+insert into invites(id, user_email, company_id, n_invites, active)
+values (1, 'm@rockthejvm.com', 1, 10, true);

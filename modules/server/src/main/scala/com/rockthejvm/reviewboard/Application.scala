@@ -35,6 +35,7 @@ object Application extends ZIOAppDefault {
       CompanyServiceLive.layer,
       ReviewServiceLive.layer,
       UserServiceLive.layer,
+      InviteServiceLive.configuredLayer,
       JwtServiceLive.configuredLayer,
       HashServiceLiveArgon2.layer,
       EmailServiceLive.configuredLayer,
@@ -43,6 +44,7 @@ object Application extends ZIOAppDefault {
       CompanyRepositoryLive.layer,
       ReviewRepositoryLive.layer,
       UserRepositoryLive.layer,
+      InviteRepositoryLive.layer,
       RecoveryTokensRepositoryLive.configuredLayer,
       // other dependencies
       Repository.dataLayer

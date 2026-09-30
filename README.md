@@ -2,7 +2,7 @@
 
 [![Scala CI](https://github.com/jcasadella/zio-rite-of-passage/actions/workflows/scala-ci.yaml/badge.svg?branch=main)](https://github.com/jcasadella/zio-rite-of-passage/actions/workflows/scala-ci.yaml)
 
-Review Board application built with Scala 3, ZIO, Scala.js, Laminar, Parcel, and PostgreSQL.
+Review Board app built with Scala 3, ZIO, Scala.js, Laminar, Parcel, and PostgreSQL.
 
 Project created from the [Rock the JVM](https://rockthejvm.com/) course of the same name.
 
@@ -44,6 +44,33 @@ To stop the database:
 docker compose down
 ```
 
+## Forward Stripe webhooks in local environment
+
+After installing and authenticating the Stripe command-line tool, run this from a separate
+terminal and leave it running while developing:
+
+```sh
+stripe listen --forward-to localhost:8080/invites/webhook
+```
+
+The tool prints a webhook signing secret beginning with `whsec_`. Set that value
+as `STRIPE_INVITES_WEBHOOK_SECRET` in the environment used to start the backend.
+
+## Run the backend server
+
+Start PostgreSQL first, then from the repository root set the Stripe credentials
+in your terminal session and run the server:
+
+```bash
+export STRIPE_SECRET_KEY="sk_test_..."
+export STRIPE_INVITES_WEBHOOK_SECRET="whsec_..."
+sbt "server / runMain com.rockthejvm.reviewboard.Application"
+```
+
+Replace the example values with your Stripe secret key and the signing secret
+for the invites webhook. Keep the values in your local environment rather than
+committing them to the repository. The backend listens on `http://localhost:8080`.
+
 ## Test the project
 
 Run all Scala tests from the repository root:
@@ -52,7 +79,7 @@ Run all Scala tests from the repository root:
 sbt test
 ```
 
-The same command is used by the GitHub Actions workflow. Tests that require PostgreSQL should be run with the database container started.
+GitHub Actions runs the same command. Start the database container before running tests that need PostgreSQL.
 
 ## Build the Scala.js frontend
 
@@ -68,7 +95,7 @@ For an optimized production build, use:
 sbt "app / Compile / fullLinkJS"
 ```
 
-The production output is generated under `modules/app/target/scala-3.5.0/`, including `app-opt.js`.
+The build writes production files to `modules/app/target/scala-3.5.0/`, including `app-opt.js`.
 
 ## Run the frontend in development
 

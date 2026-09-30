@@ -40,6 +40,7 @@ object Application extends ZIOAppDefault {
       HashServiceLiveArgon2.layer,
       EmailServiceLive.configuredLayer,
       OtpGeneratorLive.layer,
+      PaymentServiceLive.configuredLayer,
       // repositories
       CompanyRepositoryLive.layer,
       ReviewRepositoryLive.layer,

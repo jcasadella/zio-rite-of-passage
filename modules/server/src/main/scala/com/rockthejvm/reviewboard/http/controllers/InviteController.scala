@@ -9,12 +9,16 @@ import com.rockthejvm.reviewboard.http.endpoints.InviteEndpoints
 import com.rockthejvm.reviewboard.http.responses.InviteResponse
 import com.rockthejvm.reviewboard.services.InviteService
 import com.rockthejvm.reviewboard.services.JwtService
+import com.rockthejvm.reviewboard.services.PaymentService
 
-class InviteController private (inviteService: InviteService, jwtService: JwtService)
-    extends Controller
+class InviteController private (
+    inviteService: InviteService,
+    jwtService: JwtService,
+    paymentService: PaymentService
+) extends Controller
     with InviteEndpoints {
 
-  val addPack =
+  val addPack: ServerEndpoint[Any, Task] =
     addPackEndpoint
       .serverSecurityLogic[UserId, Task](token => jwtService.verifyToken(token).either)
       .serverLogic { userId => req =>
@@ -27,7 +31,7 @@ class InviteController private (inviteService: InviteService, jwtService: JwtSer
         }
       }
 
-  val invite =
+  val invite: ServerEndpoint[Any, Task] =
     inviteEndpoint
       .serverSecurityLogic[UserId, Task](token => jwtService.verifyToken(token).either)
       .serverLogic { userId => req =>
@@ -40,20 +44,49 @@ class InviteController private (inviteService: InviteService, jwtService: JwtSer
           .either
       }
 
-  val getByUserId =
+  val getByUserId: ServerEndpoint[Any, Task] =
     getByUserIdEndpoint
       .serverSecurityLogic[UserId, Task](token => jwtService.verifyToken(token).either)
       .serverLogic { userId => _ =>
         inviteService.getByUserId(userId.email).either
       }
 
-  override val routes: List[ServerEndpoint[Any, Task]] = List(addPack, invite, getByUserId)
+  val addPackPromoted: ServerEndpoint[Any, Task] =
+    addPackPromotedEndpoint
+      .serverSecurityLogic[UserId, Task](token => jwtService.verifyToken(token).either)
+      .serverLogic { userId => req =>
+        inviteService
+          .addInvitePack(userId.email, req.companyId)
+          .flatMap { packId =>
+            paymentService.createCheckoutSession(packId, userId.email)
+          }
+          .someOrFail(new RuntimeException("Cannot create payment checkout session"))
+          .map(_.getUrl()) // the checkout session URL
+          .either
+      }
+
+  val webhook: ServerEndpoint[Any, Task] =
+    webhookEndpoint
+      .serverLogic { (signature, payload) =>
+        paymentService
+          .handleWebhookEvent(
+            signature,
+            payload,
+            packId => inviteService.activatePack(packId.toLong)
+          )
+          .unit
+          .either
+      }
+
+  override val routes: List[ServerEndpoint[Any, Task]] =
+    List(addPack, addPackPromoted, webhook, invite, getByUserId)
 
 }
 
 object InviteController {
   val makeZIO = for {
-    inviteService <- ZIO.service[InviteService]
-    jwtService    <- ZIO.service[JwtService]
-  } yield new InviteController(inviteService, jwtService)
+    inviteService  <- ZIO.service[InviteService]
+    jwtService     <- ZIO.service[JwtService]
+    paymentService <- ZIO.service[PaymentService]
+  } yield new InviteController(inviteService, jwtService, paymentService)
 }

@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: dev
     
     steps:
       - name: Checkout repository
@@ -37,3 +38,6 @@ jobs:
 
       - name: Run Scala Tests
         run: sbt test
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_INVITES_WEBHOOK_SECRET: ${{ secrets.STRIPE_INVITES_WEBHOOK_SECRET }}

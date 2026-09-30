@@ -57,8 +57,8 @@ ALTER TABLE invites
 ADD CONSTRAINT uq_company_user_email UNIQUE (company_id, user_email);
 
 -- dummy data
-insert into companies(id, slug, name, url, location, country, industry, tags)
-values (1, 'rock-the-jvm', 'Rock the JVM', 'https://rockthejvm.com', 'Bucharest', 'Romania', 'Teaching', '{"scala", "zio"}');
+insert into companies(slug, name, url, location, country, industry, tags)
+values ('rock-the-jvm', 'Rock the JVM', 'https://rockthejvm.com', 'Bucharest', 'Romania', 'Teaching', '{"scala", "zio"}');
 
-insert into invites(id, user_email, company_id, n_invites, active)
-values (1, 'm@rockthejvm.com', 1, 10, true);
+insert into invites(user_email, company_id, n_invites, active)
+values ('m@rockthejvm.com', 1, 10, true);

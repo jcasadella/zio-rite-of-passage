@@ -6,12 +6,14 @@ import com.rockthejvm.reviewboard.common.Constants
 import com.rockthejvm.reviewboard.components.AddReviewCard
 import com.rockthejvm.reviewboard.components.CompanyComponents
 import com.rockthejvm.reviewboard.components.Markdown
+import com.rockthejvm.reviewboard.components.Router
 import com.rockthejvm.reviewboard.components.Time
 import com.rockthejvm.reviewboard.core.Session
 import com.rockthejvm.reviewboard.core.ZioLaminar.*
 import com.rockthejvm.reviewboard.domain.data.Company
 import com.rockthejvm.reviewboard.domain.data.Review
 import com.rockthejvm.reviewboard.domain.data.UserToken
+import com.rockthejvm.reviewboard.http.requests.InvitePackRequest
 import org.scalajs.dom
 import zio.*
 
@@ -28,6 +30,12 @@ object CompanyPage {
   val addReviewCardActive = Var[Boolean](false)
   val fetchCompanyBus = EventBus[Option[Company]]()
   val triggerRefreshBus = EventBus[Unit]()
+  val status = fetchCompanyBus.events.scanLeft(PageStatus.Loading)((s, maybeCompany) => maybeCompany match {
+    case None => PageStatus.NotFound
+    case Some(company) => PageStatus.Found(company)
+  })
+
+  val inviteErrorBus = EventBus[String]()
 
   def refreshReviewList(companyId: Long) =
     useBackend(_.reviews.getReviewsByCompanyIdEndpoint(companyId))
@@ -45,11 +53,6 @@ object CompanyPage {
     case Some(company) => refreshReviewList(company.id)
       
   }.scanLeft(List[Review]())((_, list) => list)
-
-  val status = fetchCompanyBus.events.scanLeft(PageStatus.Loading)((s, maybeCompany) => maybeCompany match {
-    case None => PageStatus.NotFound
-    case Some(company) => PageStatus.Found(company)
-  })
 
   def render(company: Company) = List(
     div(
@@ -84,7 +87,12 @@ object CompanyPage {
           ))
         .map(_.toList),
       children <-- reviewsSignal.map(_.map(renderReview)),
-      div(
+      child.maybe <-- Session.userState.signal.map(_.map(_ => renderInviteAction(company)))
+    )
+  )
+
+  def renderInviteAction(company: Company) =
+    div(
         cls := "container",
         div(
           cls := "rok-last",
@@ -100,17 +108,25 @@ object CompanyPage {
             ),
             div(
               cls := "col-md-6 col-sm-6 col-6",
-              a(
-                href   := company.url,
-                target := "blank",
-                button(`type` := "button", cls := "rock-action-btn", "Invite people")
+              button(
+                `type` := "button",
+                cls := "rock-action-btn",
+                "Invite people",
+                disabled <-- inviteErrorBus.events.mapTo(true).startWith(false),
+                onClick.mapToUnit --> (_ => startPaymentFlow(company.id))
+              ),
+              div(
+                child.text <-- inviteErrorBus.events
               )
             )
           )
         )
       )
-    )
-  )
+  
+  def startPaymentFlow(companyId: Long) =
+    useBackend(_.invites.addPackPromotedEndpoint(InvitePackRequest(companyId)))
+      .tapError(e => ZIO.succeed(inviteErrorBus.emit(e.getMessage())))
+      .emitTo(Router.externalUrlBus)
 
   def maybeRenderUserAction(maybeUser: Option[UserToken], reviewsSignal: Signal[List[Review]]) =
     maybeUser match {

@@ -20,3 +20,9 @@ node_modules/
 package-lock.json
 dist/
 .parcel-cache/
+
+### Vale lint ###
+.github/vale-styles/Google
+
+### Conf ###
+.envrc

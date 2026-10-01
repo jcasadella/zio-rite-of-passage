@@ -16,6 +16,7 @@ import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 
 import com.rockthejvm.reviewboard.domain.data.Review
+import com.rockthejvm.reviewboard.domain.data.ReviewSummary
 import com.rockthejvm.reviewboard.domain.data.User
 import com.rockthejvm.reviewboard.domain.data.UserId
 import com.rockthejvm.reviewboard.domain.data.UserToken
@@ -51,6 +52,9 @@ object ReviewControllerSpec extends ZIOSpecDefault {
       ZIO.succeed(if (companyId == 1L) List(goodReview) else List.empty)
     override def getByUserId(userId: Long): Task[List[Review]] =
       ZIO.succeed(if (userId == 1L) List(goodReview) else List.empty)
+
+    override def getSummary(companyId: Long): Task[Option[ReviewSummary]]  = ???
+    override def makeSummary(companyId: Long): Task[Option[ReviewSummary]] = ???
   }
 
   private val jwtServiceStub = new JwtService {

@@ -1,20 +1,27 @@
 package com.rockthejvm.reviewboard.services
 
+import com.rockthejvm.reviewboard.config.Configs
+import com.rockthejvm.reviewboard.config.SummaryConfig
 import com.rockthejvm.reviewboard.domain.data.Review
+import com.rockthejvm.reviewboard.domain.data.ReviewSummary
 import com.rockthejvm.reviewboard.http.requests.CreateReviewRequest
 import com.rockthejvm.reviewboard.repositories.ReviewRepository
 import zio.*
 
 import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 trait ReviewService {
   def create(request: CreateReviewRequest, userId: Long): Task[Review]
   def getById(id: Long): Task[Option[Review]]
   def getByCompanyId(companyId: Long): Task[List[Review]]
   def getByUserId(userId: Long): Task[List[Review]]
+  def getSummary(companyId: Long): Task[Option[ReviewSummary]]
+  def makeSummary(companyId: Long): Task[Option[ReviewSummary]]
 }
 
-class ReviewServiceLive private (repository: ReviewRepository) extends ReviewService {
+class ReviewServiceLive private (repository: ReviewRepository, openAiService: OpenAiService, config: SummaryConfig) extends ReviewService {
 
   override def create(request: CreateReviewRequest, userId: Long): Task[Review] =
     repository.create(
@@ -42,12 +49,55 @@ class ReviewServiceLive private (repository: ReviewRepository) extends ReviewSer
   override def getByUserId(userId: Long): Task[List[Review]] =
     repository.getByUserId(userId)
 
+  override def getSummary(companyId: Long): Task[Option[ReviewSummary]] =
+    repository.getSummary(companyId)
+  override def makeSummary(companyId: Long): Task[Option[ReviewSummary]] =
+    getByCompanyId(companyId)
+    .flatMap(list => Random.shuffle(list))
+    .map(_.take(config.nSelected))
+    .flatMap { reviews =>
+      val currentSummary: Task[Option[String]] =
+        if (reviews.size < config.minReviews)
+          ZIO.succeed(Some(s"Need to have at least ${config.minReviews} reviews to generate a summary."))
+        else
+          buildPrompt(reviews).flatMap(openAiService.getCompletion)
+      
+      currentSummary.flatMap {
+        case None => ZIO.none
+        case Some(summary) => repository.insertSummary(companyId, summary).map(Some(_))
+      }
+    }
+
+  private def buildPrompt(reviews: List[Review]): Task[String] = ZIO.succeed {
+    "You have the following reviews about a company:" +
+    reviews.zipWithIndex.map {
+      case (Review(_, _, _, management, culture, salary, benefits, wouldRecommend, review, _, updated), index) =>
+        s"""
+        Review ${index + 1}:
+          Management: $management stars / 5
+          Culture: $culture stars / 5
+          Salary: $salary stars / 5
+          Benefits: $benefits stars / 5
+          Net rpomoter score: $wouldRecommend stars / 5
+          Posted on: ${DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneOffset.UTC).format(updated)}
+          Content: "$review"
+        """
+    }
+    .mkString("\n") +
+    "Make a summary of all these reviews in at most one paragraph."
+  }
+
 }
 
 object ReviewServiceLive {
   val layer = ZLayer {
     for {
       repository <- ZIO.service[ReviewRepository]
-    } yield new ReviewServiceLive(repository)
+      openAiService <- ZIO.service[OpenAiService]
+      config <- ZIO.service[SummaryConfig]
+    } yield new ReviewServiceLive(repository, openAiService, config)
   }
+
+  val configuredLayer =
+    Configs.makeLayer[SummaryConfig]("rockthejvm.summaries") >>> layer
 }

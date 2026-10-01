@@ -1,6 +1,7 @@
 package com.rockthejvm.reviewboard.http.endpoints
 
 import com.rockthejvm.reviewboard.domain.data.Review
+import com.rockthejvm.reviewboard.domain.data.ReviewSummary
 import com.rockthejvm.reviewboard.http.requests.CreateReviewRequest
 import sttp.tapir.*
 import sttp.tapir.generic.auto.* // imports the type class derivation package
@@ -40,4 +41,20 @@ trait ReviewEndpoints extends BaseEndpoint {
   .in("reviews" / "user" / path[Long]("userId"))
   .get
   .out(jsonBody[List[Review]])
+
+  val getSummaryEndpoint = baseEndpoint
+  .tag("Reviews")
+  .name("get summary by company id")
+  .description("Get current review summary for a company by its ID")
+  .in("reviews" / "company" / path[Long]("id") / "summary")
+  .get
+  .out(jsonBody[Option[ReviewSummary]])
+
+  val makeSummaryEndpoint = baseEndpoint
+  .tag("Reviews")
+  .name("generate summary be company id")
+  .description("Trigger review summary creation for a company by its ID")
+  .in("reviews" / "company" / path[Long]("id") / "summary")
+  .post
+  .out(jsonBody[Option[ReviewSummary]])
 }

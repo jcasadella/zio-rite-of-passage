@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS invites
     active BOOLEAN NOT NULL DEFAULT false
 );
 
+CREATE TABLE IF NOT EXISTS review_summaries
+(
+    company_id BIGINT NOT NULL PRIMARY KEY,
+    contents TEXT NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT now()
+);
+
 ALTER TABLE invites
 ADD CONSTRAINT uq_company_user_email UNIQUE (company_id, user_email);
 

@@ -33,7 +33,7 @@ object Application extends ZIOAppDefault {
       Server.defaultWithPort(8080),
       // services
       CompanyServiceLive.layer,
-      ReviewServiceLive.layer,
+      ReviewServiceLive.configuredLayer,
       UserServiceLive.layer,
       InviteServiceLive.configuredLayer,
       JwtServiceLive.configuredLayer,
@@ -41,6 +41,7 @@ object Application extends ZIOAppDefault {
       EmailServiceLive.configuredLayer,
       OtpGeneratorLive.layer,
       PaymentServiceLive.configuredLayer,
+      OpenAiServiceLive.configuredLayer,
       // repositories
       CompanyRepositoryLive.layer,
       ReviewRepositoryLive.layer,

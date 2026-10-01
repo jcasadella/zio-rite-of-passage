@@ -27,3 +27,11 @@
   resize: vertical;
   padding: 0.5rem 1rem;
 }
+
+.generate-btn {
+  margin-top: 1rem;
+}
+
+.review-summary-contents {
+  margin-bottom: 1rem;
+}

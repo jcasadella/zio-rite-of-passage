@@ -4,6 +4,7 @@ import zio.*
 import zio.test.*
 
 import com.rockthejvm.reviewboard.domain.data.Review
+import com.rockthejvm.reviewboard.domain.data.ReviewSummary
 import com.rockthejvm.reviewboard.http.requests.CreateReviewRequest
 import com.rockthejvm.reviewboard.repositories.ReviewRepository
 import com.rockthejvm.reviewboard.syntax.*
@@ -39,6 +40,9 @@ object ReviewServiceSpec extends ZIOSpecDefault {
 
       override def delete(id: Long): Task[Review] =
         getById(id).someOrFail(throw new NoSuchElementException(s"Review with id $id not found"))
+
+      override def getSummary(companyId: Long): Task[Option[ReviewSummary]]             = ???
+      override def insertSummary(companyId: Long, summary: String): Task[ReviewSummary] = ???
 
     }
   )
@@ -119,7 +123,8 @@ object ReviewServiceSpec extends ZIOSpecDefault {
     }
   ).provide(
     stubRepoLayer,
-    ReviewServiceLive.layer
+    ReviewServiceLive.configuredLayer,
+    OpenAiServiceLive.configuredLayer
   )
 
 }

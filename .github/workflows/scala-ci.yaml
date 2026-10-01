@@ -41,3 +41,4 @@ jobs:
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_INVITES_WEBHOOK_SECRET: ${{ secrets.STRIPE_INVITES_WEBHOOK_SECRET }}
+          OPENAI_SECRET_KEY: ${{ secrets.OPENAI_SECRET_KEY }}

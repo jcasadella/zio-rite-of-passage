@@ -1,5 +1,6 @@
 package com.rockthejvm.reviewboard.core
 
+import com.rockthejvm.reviewboard.common.Constants
 import com.rockthejvm.reviewboard.config.BackendClientConfig
 import com.rockthejvm.reviewboard.domain.data.Review
 import com.rockthejvm.reviewboard.http.endpoints.CompanyEndpoints
@@ -79,7 +80,7 @@ object BackendClientLive {
   val configuredLayer = {
     val backend = FetchZioBackend()
     val interpreter = SttpClientInterpreter()
-    val config = BackendClientConfig(Some(uri"http://localhost:8080"))
+    val config = BackendClientConfig(Some(uri"${Constants.backendBaseUrl}"))
 
     ZLayer.succeed(AppBackend(backend)) ++
       ZLayer.succeed(interpreter) ++

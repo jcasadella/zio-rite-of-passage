@@ -50,7 +50,7 @@ After installing and authenticating the Stripe command-line tool, run this from 
 terminal and leave it running while developing:
 
 ```sh
-stripe listen --forward-to localhost:8080/invites/webhook
+stripe listen --forward-to localhost:4041/invites/webhook
 ```
 
 The tool prints a webhook signing secret beginning with `whsec_`. Set that value
@@ -70,7 +70,7 @@ sbt "server / runMain com.rockthejvm.reviewboard.Application"
 
 Replace the example values with your Stripe secret key and the signing secret
 for the invites webhook. Keep the values in your local environment rather than
-committing them to the repository. The backend listens on `http://localhost:8080`.
+committing them to the repository. The backend listens on `http://localhost:4041`.
 
 ## Test the project
 

@@ -63,7 +63,7 @@ object UserServiceSpec extends ZIOSpecDefault {
   }
 
   val stubEmailLayer = ZLayer.succeed {
-    new EmailService {
+    new EmailService("http://localhost:8080") {
       override def sendEmail(to: String, subject: String, content: String): Task[Unit] = ZIO.unit
     }
   }

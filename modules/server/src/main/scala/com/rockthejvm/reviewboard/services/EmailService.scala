@@ -1,19 +1,21 @@
 package com.rockthejvm.reviewboard.services
 
-import com.rockthejvm.reviewboard.config.Configs
-import com.rockthejvm.reviewboard.config.EmailServiceConfig
+import java.util.Properties
+
 import zio.*
 
-import java.util.Properties
+import com.rockthejvm.reviewboard.config.Configs
+import com.rockthejvm.reviewboard.config.EmailServiceConfig
+import com.rockthejvm.reviewboard.domain.data.Company
+
 import javax.mail.Authenticator
 import javax.mail.Message
 import javax.mail.PasswordAuthentication
 import javax.mail.Session
 import javax.mail.Transport
 import javax.mail.internet.MimeMessage
-import com.rockthejvm.reviewboard.domain.data.Company
 
-trait EmailService {
+trait EmailService(baseUrl: String) {
   def sendEmail(to: String, subject: String, content: String): Task[Unit]
   def sendPasswordRecoveryEmail(to: String, token: String): Task[Unit] = {
     val subject = "Rock the JVM: Password Recovery"
@@ -27,6 +29,10 @@ trait EmailService {
     ">
       <h1>Rock the JVM: Password Recovery</h1>
       <p>Your password recovery token is: <strong>$token</strong></p>
+      <p>
+        Go
+        <a href="$baseUrl/recover"> here </a>
+        to reset your password.
       <p>😘 from Rock the JVM</p>
     </div>
     """
@@ -46,7 +52,7 @@ trait EmailService {
       <h1>You're invited to review ${company.name}</h1>
       <p>
         Go to
-        <a href="http://localhost:1234/company/${company.slug}">this link</a>
+        <a href="$baseUrl/company/${company.slug}">this link</a>
         to add your thoughts on the app.
         <br/>
         Should take just a minute.
@@ -58,11 +64,12 @@ trait EmailService {
   }
 }
 
-class EmailServiceLive private (config: EmailServiceConfig) extends EmailService {
+class EmailServiceLive private (config: EmailServiceConfig)
+    extends EmailService(baseUrl = config.baseUrl) {
 
   override def sendEmail(to: String, subject: String, content: String): Task[Unit] = {
     val messageZIO = for {
-      prop <- propsResource
+      prop    <- propsResource
       session <- createSession(prop)
       message <- createMessage(session)(config.from, to, subject, content)
     } yield message
@@ -90,17 +97,15 @@ class EmailServiceLive private (config: EmailServiceConfig) extends EmailService
     )
   }
 
-  private def createMessage(session: Session)(
-    from: String,
-    to: String,
-    subject: String,
-    content: String): Task[MimeMessage] = {
-      val message = new MimeMessage(session)
-      message.setFrom(from)
-      message.setRecipients(Message.RecipientType.TO, to)
-      message.setSubject(subject)
-      message.setContent(content, "text/html; charset=utf-8")
-      ZIO.succeed(message)
+  private def createMessage(
+      session: Session
+  )(from: String, to: String, subject: String, content: String): Task[MimeMessage] = {
+    val message = new MimeMessage(session)
+    message.setFrom(from)
+    message.setRecipients(Message.RecipientType.TO, to)
+    message.setSubject(subject)
+    message.setContent(content, "text/html; charset=utf-8")
+    ZIO.succeed(message)
 
   }
 }
@@ -117,8 +122,8 @@ object EmailServiceDemo extends ZIOAppDefault {
 
   val program = for {
     emailService <- ZIO.service[EmailService]
-    _ <- emailService.sendPasswordRecoveryEmail("nobody@myfakedomain.foo", "ABC123456")
-    _ <- Console.printLine("Email sent")
+    _            <- emailService.sendPasswordRecoveryEmail("nobody@myfakedomain.foo", "ABC123456")
+    _            <- Console.printLine("Email sent")
   } yield ()
 
   override def run = program.provide(EmailServiceLive.configuredLayer)

@@ -49,15 +49,17 @@ object UserFlowSpec extends ZIOSpecDefault with RepositorySpec {
         path: String,
         payload: A,
         maybeToken: Option[String] = None
-    ): Task[Option[B]] =
+    ): Task[Option[B]] = {
+      val apiPath = s"/api/${path.stripPrefix("/")}"
       basicRequest
-        .method(method, uri"$path")
+        .method(method, uri"$apiPath")
         .body(payload.toJson)
         .auth
         .bearer(maybeToken.getOrElse(""))
         .send(backend)
         .map(_.body)
         .map(_.toOption.flatMap(payload => payload.fromJson[B].toOption))
+    }
 
     def post[B: JsonCodec](
         path: String,
@@ -66,12 +68,14 @@ object UserFlowSpec extends ZIOSpecDefault with RepositorySpec {
     ): Task[Option[B]] =
       sendRequest(Method.POST, path, payload, maybeToken)
 
-    def postNoResponse(path: String, payload: A): Task[Unit] =
+    def postNoResponse(path: String, payload: A): Task[Unit] = {
+      val apiPath = s"/api/${path.stripPrefix("/")}"
       basicRequest
-        .method(Method.POST, uri"$path")
+        .method(Method.POST, uri"$apiPath")
         .body(payload.toJson)
         .send(backend)
         .map(_ => ())
+    }
 
     def put[B: JsonCodec](
         path: String,
@@ -89,7 +93,7 @@ object UserFlowSpec extends ZIOSpecDefault with RepositorySpec {
 
   }
 
-  class EmailServiceProbe extends EmailService {
+  class EmailServiceProbe extends EmailService("http://localhost:8080") {
     val db = collection.mutable.Map[String, String]()
     override def sendEmail(to: String, subject: String, content: String): Task[Unit] = ZIO.unit
     override def sendPasswordRecoveryEmail(to: String, token: String): Task[Unit] =
@@ -120,7 +124,7 @@ object UserFlowSpec extends ZIOSpecDefault with RepositorySpec {
               RegisterUserAccount("me@rockthejvm.com", "rockthejvm")
             )
           maybeToken <- basicRequest
-            .post(uri"/users/login")
+            .post(uri"/api/users/login")
             .body(LoginRequest("me@rockthejvm.com", "rockthejvm").toJson)
             .send(backendStub)
             .map(_.body)

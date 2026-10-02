@@ -5,5 +5,6 @@ final case class EmailServiceConfig(
     host: String,
     port: Int,
     user: String,
-    password: String
+    password: String,
+    baseUrl: String
 )

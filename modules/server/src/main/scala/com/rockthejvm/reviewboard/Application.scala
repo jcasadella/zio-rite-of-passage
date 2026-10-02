@@ -1,5 +1,7 @@
 package com.rockthejvm.reviewboard
 
+import java.net.InetSocketAddress
+
 import zio.*
 import zio.http.Server
 
@@ -8,12 +10,22 @@ import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
 
+import com.rockthejvm.reviewboard.config.Configs
+import com.rockthejvm.reviewboard.config.HttpConfig
 import com.rockthejvm.reviewboard.http.HttpApi
 import com.rockthejvm.reviewboard.repositories.*
 import com.rockthejvm.reviewboard.services.*
 import com.rockthejvm.reviewboard.services.CompanyService
 
 object Application extends ZIOAppDefault {
+
+  val configuredServer =
+    Configs.makeLayer[HttpConfig]("rockthejvm.http") >>>
+      ZLayer(
+        ZIO
+          .service[HttpConfig]
+          .map(config => Server.Config.default.copy(address = InetSocketAddress(config.port)))
+      ) >>> Server.live
 
   val serverProgram = for {
     endpoints <- HttpApi.endpointsZIO
@@ -30,7 +42,7 @@ object Application extends ZIOAppDefault {
 
   override def run: ZIO[Any, Throwable, Unit] =
     serverProgram.provide(
-      Server.defaultWithPort(8080),
+      configuredServer,
       // services
       CompanyServiceLive.layer,
       ReviewServiceLive.configuredLayer,

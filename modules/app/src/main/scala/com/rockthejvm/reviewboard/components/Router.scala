@@ -17,7 +17,7 @@ object Router {
       routes(
         div(
           cls := "container-fluid",
-          (pathEnd | path("companies")) { // localhost:1234 or localhost:1234/ or localhost:1234/companies
+          (pathEnd | path("companies")) {
             CompaniesPage()
           },
           path("login") {

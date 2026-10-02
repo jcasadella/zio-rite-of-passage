@@ -26,8 +26,8 @@ CREATE TABLE IF NOT EXISTS reviews
     benefits INT NOT NULL,
     would_recommend INT NOT NULL,
     review TEXT NOT NULL,
-    created TIMESTAMP NOT NULL DEFAULT now(),
-    updated TIMESTAMP NOT NULL DEFAULT now()
+    created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS users
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS review_summaries
 (
     company_id BIGINT NOT NULL PRIMARY KEY,
     contents TEXT NOT NULL,
-    created TIMESTAMP NOT NULL DEFAULT now()
+    created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 ALTER TABLE invites
@@ -69,3 +69,45 @@ values ('rock-the-jvm', 'Rock the JVM', 'https://rockthejvm.com', 'Bucharest', '
 
 insert into invites(user_email, company_id, n_invites, active)
 values ('m@rockthejvm.com', 1, 10, true);
+
+-- Migrate existing timestamps that were stored as local time at UTC+02.
+-- The checks make this safe to run against databases already using timestamptz.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'reviews'
+          AND column_name = 'created'
+          AND data_type = 'timestamp without time zone'
+    ) THEN
+        ALTER TABLE reviews
+            ALTER COLUMN created TYPE TIMESTAMP WITH TIME ZONE
+            USING created AT TIME ZONE INTERVAL '+02:00';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'reviews'
+          AND column_name = 'updated'
+          AND data_type = 'timestamp without time zone'
+    ) THEN
+        ALTER TABLE reviews
+            ALTER COLUMN updated TYPE TIMESTAMP WITH TIME ZONE
+            USING updated AT TIME ZONE INTERVAL '+02:00';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'review_summaries'
+          AND column_name = 'created'
+          AND data_type = 'timestamp without time zone'
+    ) THEN
+        ALTER TABLE review_summaries
+            ALTER COLUMN created TYPE TIMESTAMP WITH TIME ZONE
+            USING created AT TIME ZONE INTERVAL '+02:00';
+    END IF;
+END;
+$$;

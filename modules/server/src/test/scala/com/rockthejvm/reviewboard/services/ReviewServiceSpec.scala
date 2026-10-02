@@ -1,13 +1,18 @@
 package com.rockthejvm.reviewboard.services
 
+import java.time.Instant
+
 import zio.*
 import zio.test.*
 
+import com.rockthejvm.reviewboard.config.SummaryConfig
 import com.rockthejvm.reviewboard.domain.data.Review
 import com.rockthejvm.reviewboard.domain.data.ReviewSummary
 import com.rockthejvm.reviewboard.http.requests.CreateReviewRequest
 import com.rockthejvm.reviewboard.repositories.ReviewRepository
 import com.rockthejvm.reviewboard.syntax.*
+
+import io.getquill.ast.AggregationOperator.sum
 
 object ReviewServiceSpec extends ZIOSpecDefault {
 
@@ -41,8 +46,11 @@ object ReviewServiceSpec extends ZIOSpecDefault {
       override def delete(id: Long): Task[Review] =
         getById(id).someOrFail(throw new NoSuchElementException(s"Review with id $id not found"))
 
-      override def getSummary(companyId: Long): Task[Option[ReviewSummary]]             = ???
-      override def insertSummary(companyId: Long, summary: String): Task[ReviewSummary] = ???
+      override def getSummary(companyId: Long): Task[Option[ReviewSummary]] =
+        ZIO.none
+
+      override def insertSummary(companyId: Long, summary: String): Task[ReviewSummary] =
+        ZIO.succeed(ReviewSummary(companyId, summary, Instant.now()))
 
     }
   )
@@ -74,6 +82,17 @@ object ReviewServiceSpec extends ZIOSpecDefault {
     created = java.time.Instant.now(),
     updated = java.time.Instant.now()
   )
+
+  val stubReviewSummaryService = ZLayer.succeed {
+    new OpenAiService {
+      override def getCompletion(prompt: String): Task[Option[String]] = ZIO.none
+    }
+  }
+
+  val summaryConfigLayer = ZLayer.succeed {
+    SummaryConfig(3, 20)
+  }
+
   override def spec = suite("ReviewServiceSpec")(
     test("create review") {
       for {
@@ -123,8 +142,9 @@ object ReviewServiceSpec extends ZIOSpecDefault {
     }
   ).provide(
     stubRepoLayer,
-    ReviewServiceLive.configuredLayer,
-    OpenAiServiceLive.configuredLayer
+    ReviewServiceLive.layer,
+    stubReviewSummaryService,
+    summaryConfigLayer
   )
 
 }

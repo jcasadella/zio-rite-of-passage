@@ -87,9 +87,6 @@ object CreateCompanyPage extends FormPage[CreateCompanyState]("Post a Company") 
       (s, v) => s.copy(url = v, showStatus = false, upstreamStatus = None)
     ),
     renderLogoUpload("Company Logo", "logo-upload"),
-    img(
-      src <-- stateVar.signal.map(_.image.getOrElse(""))
-    ),
     renderInput(
       "Location",
       "location-input",
@@ -156,7 +153,7 @@ object CreateCompanyPage extends FormPage[CreateCompanyState]("Post a Company") 
 
   private val MaxImageDimension = 256
   private def computeDimensions(width: Int, height: Int): (Int, Int) =
-    if (width > height) {
+    if (width >= height) {
       val ratio = width * 1.0 / MaxImageDimension
       val newW  = width / ratio
       val newH  = height / ratio
@@ -179,12 +176,19 @@ object CreateCompanyPage extends FormPage[CreateCompanyState]("Post a Company") 
             if (isRequired) span("*") else span(),
             name
           ),
-          input(
-            `type` := "file",
-            cls    := "form-control",
-            idAttr := uid,
-            accept := "image/*",
-            onChange.mapToFiles --> (files => (fileUploader(files)))
+          div(
+            cls := "image-upload",
+            input(
+              `type` := "file",
+              cls    := "form-control",
+              idAttr := uid,
+              accept := "image/*",
+              onChange.mapToFiles --> (files => (fileUploader(files)))
+            ),
+            img(
+              cls := "image-upload-thumbnail",
+              src <-- stateVar.signal.map(_.image.getOrElse(Constants.genericCompanyImage))
+            )
           )
         )
       )

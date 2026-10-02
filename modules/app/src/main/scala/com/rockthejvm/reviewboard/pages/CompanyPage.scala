@@ -251,11 +251,34 @@ object CompanyPage {
       cls := "container-fluid the-rock",
       onMountCallback(_ => useBackend(_.companies.getByIdEndpoint(companySlug)).emitTo(fetchCompanyBus)),
       children <-- status.map {
-        case PageStatus.Loading => List(div("loading..."))
-        case PageStatus.NotFound => List(div("Company not found"))
+        case PageStatus.Loading => renderLoading()
+        case PageStatus.NotFound => renderCompanyNotFound()
         case PageStatus.Found(company) => render(company)
       }
     )
+
+  def renderLoading() = List(
+    div(
+      cls := "simple-titled-page",
+      h1("Loading...")
+    )
+  )
+
+  def renderCompanyNotFound() = List(
+    div(
+      cls := "simple-titled-page",
+      h1("Oops!"),
+      h2("This comapny doesn't exist."),
+      div(
+        "Maybe check the ",
+        a(
+          href:="/",
+          "list of companies "
+        ),
+        "again?"
+      )
+    )
+  )
   
   def injectMarkdown(review: Review) =
     div(

@@ -5,5 +5,10 @@ import org.scalajs.dom
 
 object NotFoundPage {
   def apply() =
-    div("404 Invalid page - Are you lost?")
+    div(
+      cls := "simple-titled-page",
+      h1("Oops!"),
+      h2("This page can't be found."),
+      div("You lost, friend?")
+    )
 }

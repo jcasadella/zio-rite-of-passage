@@ -28,7 +28,7 @@ cd ../..
 From the repository root:
 
 ```bash
-docker compose up -d db
+docker-compose up
 ```
 
 The database listens on `localhost:5432` and uses the credentials configured in `docker-compose.yml`:
@@ -41,7 +41,7 @@ password: docker
 To stop the database:
 
 ```bash
-docker compose down
+docker-compose down
 ```
 
 ## Forward Stripe webhooks in local environment
@@ -58,12 +58,13 @@ as `STRIPE_INVITES_WEBHOOK_SECRET` in the environment used to start the backend.
 
 ## Run the backend server
 
-Start PostgreSQL first, then from the repository root set the Stripe credentials
-in your terminal session and run the server:
+Start PostgreSQL first, then from the repository root set the required Stripe
+and OpenAI credentials in your terminal session and run the server:
 
 ```bash
 export STRIPE_SECRET_KEY="sk_test_..."
 export STRIPE_INVITES_WEBHOOK_SECRET="whsec_..."
+export OPENAI_SECRET_KEY="..."
 sbt "server / runMain com.rockthejvm.reviewboard.Application"
 ```
 
@@ -79,7 +80,7 @@ Run all Scala tests from the repository root:
 sbt test
 ```
 
-GitHub Actions runs the same command. Start the database container before running tests that need PostgreSQL.
+GitHub Actions runs the same command. Start the database container before running tests that need PostgreSQL. Tests also require the environment variables listed in the backend setup section.
 
 ## Build the Scala.js frontend
 

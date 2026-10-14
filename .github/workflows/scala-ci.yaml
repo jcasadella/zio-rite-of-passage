@@ -9,7 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    environment: staging
     
     steps:
       - name: Checkout repository
@@ -43,7 +42,27 @@ jobs:
           STRIPE_INVITES_WEBHOOK_SECRET: test-webhook-secret
           OPENAI_SECRET_KEY: test-secret-key
 
-      - name: Build backend's docker image
+  deploy-staging:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: sbt
+
+      - name: Setup SBT
+        uses: sbt/setup-sbt@v1
+
+      - name: Build backend Docker image
         run: |
           set -euo pipefail
           VERSION="$(sbt -batch -error 'print stagingBuild / version' \
@@ -74,22 +93,21 @@ jobs:
         working-directory: modules/app
 
       - name: Package frontend
-        run: |
-          cd modules/app
-          npm run build-staging
+        run: npm run build-staging
+        working-directory: modules/app
 
-      - name: Deploy backend to staging
+      - name: Upload backend files to staging
         uses: appleboy/scp-action@v1
         with:
           host: ${{ vars.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 2222
-          source: docker-compose.yml, server.tar
+          source: docker-compose.yml,server.tar
           target: "/opt/reviewboard"
           overwrite: true
 
-      - name: Deploy frontend to staging
+      - name: Upload frontend to staging
         uses: appleboy/scp-action@v1
         with:
           host: ${{ vars.SERVER_HOST }}

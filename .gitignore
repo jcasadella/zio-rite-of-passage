@@ -19,10 +19,16 @@ metals.sbt
 node_modules/
 package-lock.json
 dist/
+dist-staging/
 .parcel-cache/
 
 ### Vale lint ###
 .github/vale-styles/Google
 
-### Conf ###
-.envrc
+### Conf and deploy ###
+.env*
+cloud-init.yml
+server.tar
+nginx*
+setup.sh
+build

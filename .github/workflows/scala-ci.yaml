@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    environment: dev
+    environment: staging
     
     steps:
       - name: Checkout repository
@@ -39,6 +39,91 @@ jobs:
       - name: Run Scala Tests
         run: sbt test
         env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          STRIPE_INVITES_WEBHOOK_SECRET: ${{ secrets.STRIPE_INVITES_WEBHOOK_SECRET }}
-          OPENAI_SECRET_KEY: ${{ secrets.OPENAI_SECRET_KEY }}
+          STRIPE_SECRET_KEY: test-secret-key
+          STRIPE_INVITES_WEBHOOK_SECRET: test-webhook-secret
+          OPENAI_SECRET_KEY: test-secret-key
+
+      - name: Build backend's docker image
+        run: |
+          set -euo pipefail
+          VERSION="$(sbt -batch -error 'print stagingBuild / version' \
+            | sed -E 's/\x1B\[[0-9;]*[[:alpha:]]//g' \
+            | grep -Eo '^[[:space:]]*[0-9][A-Za-z0-9_.-]*[[:space:]]*$' \
+            | tr -d '[:space:]' \
+            | tail -n 1)"
+          if [[ -z "$VERSION" ]]; then
+            printf 'SBT returned an empty stagingBuild version\n' >&2
+            exit 1
+          fi
+          sbt "stagingBuild / Docker / publishLocal"
+          IMAGE="rockthejvm-reviewboard-staging:${VERSION}"
+          printf 'Saving image tag: %s\n' "$IMAGE"
+          docker image inspect "$IMAGE" >/dev/null
+          docker image save --output server.tar "$IMAGE"
+
+      - name: Build optimized Scala.js frontend
+        run: sbt "app / Compile / fullLinkJS"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: modules/app
+
+      - name: Package frontend
+        run: |
+          cd modules/app
+          npm run build-staging
+
+      - name: Deploy backend to staging
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 2222
+          source: docker-compose.yml, server.tar
+          target: "/opt/reviewboard"
+          overwrite: true
+
+      - name: Deploy frontend to staging
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 2222
+          source: modules/app/dist-staging/*
+          target: "/opt/reviewboard/html"
+          overwrite: true
+
+      # 2. SSH into the server, authenticate Infisical, and start the app
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 2222
+          script: |
+            # Navigate to the deployment directory
+            cd /opt/reviewboard
+            
+            # Load the Infisical Machine Identity credentials and Project ID
+            source /opt/reviewboard/.env.infisical-staging
+            
+            # Authenticate the server against the EU Infisical cloud
+            export INFISICAL_TOKEN=$(infisical login \
+              --method=universal-auth \
+              --client-id="$INFISICAL_CLIENT_ID" \
+              --client-secret="$INFISICAL_CLIENT_SECRET" \
+              --domain="$INFISICAL_API_URL" \
+              --plain \
+              --silent)
+
+            docker load -i server.tar
+            
+            infisical run --projectId="$INFISICAL_PROJECT_ID" --env=staging -- docker compose up -d --remove-orphans

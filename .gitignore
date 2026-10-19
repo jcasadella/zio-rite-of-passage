@@ -27,8 +27,6 @@ dist-staging/
 
 ### Conf and deploy ###
 .env*
-cloud-init.yml
+private
 server.tar
-nginx*
-setup.sh
 build

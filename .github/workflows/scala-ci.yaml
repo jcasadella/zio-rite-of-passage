@@ -62,6 +62,7 @@ jobs:
       - name: Setup SBT
         uses: sbt/setup-sbt@v1
 
+      # 1. Build backend and frontend, and upload them to the staging server
       - name: Build backend Docker image
         run: |
           set -euo pipefail
@@ -118,7 +119,25 @@ jobs:
           target: "/opt/reviewboard/html"
           overwrite: true
 
-      # 2. SSH into the server, authenticate Infisical, and start the app
+      # 2. Configure staging server with Ansible
+      - name: Install Ansible
+        run: pipx install ansible
+      
+      - name: Execute Ansible Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          # 1. Start the SSH agent in the background
+          eval $(ssh-agent -s)
+          
+          # 2. Pipe the secret directly into the agent's memory (never hits the disk)
+          echo "${{ secrets.SERVER_SSH_KEY }}" | ssh-add -
+          
+          # 3. Run the playbook (Ansible automatically uses the active SSH agent)
+          cd ansible
+          ansible-playbook -i inventory.ini playbook.yml --limit staging
+
+      # 3. SSH into the server, authenticate Infisical, and start the app
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.5
         with:

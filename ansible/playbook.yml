@@ -1,0 +1,124 @@
+---
+- name: Provision Staging Server
+  hosts: staging
+  become: yes
+  vars_files:
+    - vars.yml
+
+  tasks:
+    # --- 1. Docker & Docker Compose Setup ---
+    - name: Install prerequisite packages for Docker
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - gnupg
+        state: present
+        update_cache: yes
+
+    - name: Configure Docker APT repository
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: deb
+        uris: https://download.docker.com/linux/ubuntu
+        suites: "{{ ansible_facts['distribution_release'] }}"
+        components: stable
+        architectures: "{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else 'amd64' }}"
+        signed_by: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Install Docker and Docker Compose Plugin
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Ensure Docker service is running and enabled
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    # --- 2. Nginx Setup ---
+    - name: Install Nginx and Certbot
+      apt:
+        name:
+          - nginx
+        state: present
+
+    - name: Ensure snapd is installed (Required for Certbot)
+      apt:
+        name: snapd
+        state: present
+
+    - name: Ensure snap core is up to date
+      command: snap install core
+      register: snap_core
+      changed_when: "'already installed' not in snap_core.stdout"
+
+    - name: Refresh snap core
+      command: snap refresh core
+      register: snap_refresh
+      changed_when: "'has no updates available' not in snap_refresh.stderr and 'has no updates available' not in snap_refresh.stdout"
+
+    - name: Install Certbot via Snap
+      community.general.snap:
+        name: certbot
+        classic: yes
+        state: present
+
+    - name: Create symlink for Certbot
+      file:
+        src: /snap/bin/certbot
+        dest: /usr/bin/certbot
+        state: link
+
+    - name: Create static files directory
+      file:
+        path: "{{ static_files_path }}"
+        state: directory
+        mode: '0755'
+
+    - name: Deploy Nginx configuration
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/{{ domain_name }}
+      notify: Reload Nginx
+
+    - name: Enable the Nginx site
+      file:
+        src: /etc/nginx/sites-available/{{ domain_name }}
+        dest: /etc/nginx/sites-enabled/{{ domain_name }}
+        state: link
+      notify: Reload Nginx
+
+    - name: Remove default Nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload Nginx
+
+    # We must force Ansible to reload Nginx now so Certbot can verify the domain
+    - name: Flush handlers
+      meta: flush_handlers
+
+    # --- 3. Let's Encrypt Setup ---
+    - name: Obtain Let's Encrypt certificate
+      command: certbot --nginx -d {{ domain_name }} -m {{ email }} --agree-tos --non-interactive --redirect
+      args:
+        # This prevents Certbot from requesting a new cert every time you run Ansible
+        creates: /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
+      # If DNS hasn't propagated yet, don't fail the whole playbook
+      ignore_errors: yes
+
+  handlers:
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded

@@ -106,6 +106,56 @@
         state: absent
       notify: Reload Nginx
 
+    # --- Firewall & Security Setup ---
+    - name: Ensure UFW is installed
+      apt:
+        name: ufw
+        state: present
+
+    - name: Allow custom SSH port
+      community.general.ufw:
+        rule: allow
+        port: '2222'
+        proto: tcp
+
+    - name: Ensure standard SSH port is closed
+      community.general.ufw:
+        rule: deny
+        port: '22'
+        proto: tcp
+
+    - name: Allow HTTP and HTTPS traffic (Nginx Full)
+      community.general.ufw:
+        rule: allow
+        name: Nginx Full
+
+    - name: Enable UFW and deny incoming by default
+      community.general.ufw:
+        state: enabled
+        default: deny
+
+    - name: Install fail2ban
+      apt:
+        name: fail2ban
+        state: present
+
+    - name: Configure fail2ban to use UFW
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [DEFAULT]
+          # Tell fail2ban to use ufw instead of raw iptables
+          banaction = ufw
+          banaction_allports = ufw
+
+          [sshd]
+          enabled = true
+          port = 2222
+          # Ban for 1 hour after 3 failed attempts
+          bantime = 3600
+          maxretry = 3
+      notify: Restart fail2ban
+
     # We must force Ansible to reload Nginx now so Certbot can verify the domain
     - name: Flush handlers
       meta: flush_handlers
@@ -124,3 +174,7 @@
       service:
         name: nginx
         state: reloaded
+    - name: Restart fail2ban
+      service:
+        name: fail2ban
+        state: restarted

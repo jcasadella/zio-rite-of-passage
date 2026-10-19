@@ -79,6 +79,14 @@
         dest: /usr/bin/certbot
         state: link
 
+    - name: Create backend files directory
+      file:
+        path: "{{ backend_files_path }}"
+        state: directory
+        mode: '0755'
+        owner: holu
+        group: holu
+
     - name: Create static files directory
       file:
         path: "{{ static_files_path }}"

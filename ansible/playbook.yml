@@ -126,7 +126,9 @@
       template:
         src: templates/nginx.conf.j2
         dest: /etc/nginx/sites-available/{{ domain_name }}
-      notify: Reload Nginx
+      notify:
+        - Reload Nginx
+        - Reinstall Certbot SSL
 
     - name: Enable the Nginx site
       file:
@@ -207,10 +209,12 @@
 
   handlers:
     - name: Reload Nginx
-      service:
+      ansible.builtin.service:
         name: nginx
         state: reloaded
     - name: Restart fail2ban
-      service:
+      ansible.builtin.service:
         name: fail2ban
         state: restarted
+    - name: Reinstall Certbot SSL
+      command: certbot install --nginx --cert-name {{ domain_name }} --non-interactive --redirect

@@ -9,6 +9,8 @@ services:
       - "5432:5432"
     volumes:
       - "./sql:/docker-entrypoint-initdb.d"
+      # Persistent volume for Postgres data, use `docker compose -v down` to flush data
+      - postgres_data:/var/lib/postgresql/data
 
   server:
     image: rockthejvm-reviewboard-staging:1.0.0
@@ -32,3 +34,6 @@ services:
         EMAIL_PASSWORD: ${EMAIL_PASSWORD:?Set EMAIL_PASSWORD in your shell environment}
         EMAIL_BASE_URL: ${EMAIL_BASE_URL:?Set EMAIL_BASE_URL in your shell environment}
         OPENAI_SECRET_KEY: ${OPENAI_SECRET_KEY:?Set OPENAI_SECRET_KEY in your shell environment}
+
+volumes:
+  postgres_data:

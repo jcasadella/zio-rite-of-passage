@@ -110,6 +110,7 @@ lazy val stagingBuild = (project in (file("build/staging")))
     name            := "rockthejvm-reviewboard-staging",
     dockerBaseImage := "eclipse-temurin:21-jre", // can use a different JDK
     dockerExposedPorts ++= Seq(4041),
+    dockerBuildOptions ++= Seq("--platform", "linux/arm64"),
     Compile / mainClass         := Some("com.rockthejvm.reviewboard.Application"),
     Compile / resourceDirectory := ((server / Compile / resourceDirectory).value / "staging")
   )

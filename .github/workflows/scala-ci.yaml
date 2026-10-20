@@ -62,6 +62,12 @@ jobs:
       - name: Setup SBT
         uses: sbt/setup-sbt@v1
 
+      # Add this right before your SBT build step
+      - name: Set up QEMU for ARM64 cross-compilation
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64
+
       # 1. Build backend and frontend
       - name: Build backend Docker image
         run: |

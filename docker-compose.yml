@@ -12,6 +12,7 @@ services:
 
   server:
     image: rockthejvm-reviewboard-staging:1.0.0
+    platform: linux/arm64
     restart: always
     ports:
       - "4041:4041"

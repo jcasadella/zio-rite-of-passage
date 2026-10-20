@@ -45,6 +45,12 @@
         state: started
         enabled: yes
 
+    - name: Add user holu to docker group
+      ansible.builtin.user:
+        name: holu
+        groups: docker
+        append: yes
+
     # --- Infisical CLI Setup ---
     - name: Download Infisical repository setup script
       ansible.builtin.get_url:

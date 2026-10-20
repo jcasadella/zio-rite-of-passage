@@ -125,7 +125,11 @@ The available npm production/staging scripts are:
 ```bash
 cd modules/app
 npm run build-staging
-npm run build-prod
 ```
 
-These scripts expect the corresponding `build/index.html` entry point and write to `dist-staging` or `dist-prod`.
+```bash
+cd modules/app
+npm run build-pro
+```
+
+These scripts expect the corresponding `build/index.html` entry point and write to `dist-staging` or `dist-pro`.

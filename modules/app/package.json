@@ -1,8 +1,11 @@
 {
   "scripts": {
-    "start": "parcel index.html --no-cache --dist-dir dist --log-level info",
-    "build-staging": "parcel build index.pro.html --dist-dir dist-staging --log-level info",
-    "build-prod": "parcel build index.pro.html --dist-dir dist-prod --log-level info"
+    "predev": "rm -rf target/build && mkdir -p target/build && cp -a target/scala-3.5.0/app-fastopt/. target/build/",
+    "dev": "parcel index.html --no-cache --dist-dir dist --log-level info",
+    "prebuild-staging": "rm -rf target/build && mkdir -p target/build && cp -a target/scala-3.5.0/app-opt/. target/build/",
+    "build-staging": "parcel build index.html --dist-dir dist-staging --log-level info",
+    "prebuild-pro": "rm -rf target/build && mkdir -p target/build && cp target/scala-3.5.0/app-opt/main.js target/build/main.js",
+    "build-pro": "parcel build index.html --dist-dir dist-pro --no-source-maps --log-level info"
   },
   "devDependencies": {
     "parcel": "^2.1.0",

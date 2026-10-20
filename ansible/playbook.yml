@@ -8,7 +8,7 @@
   tasks:
     # --- 1. Docker & Docker Compose Setup ---
     - name: Install prerequisite packages for Docker
-      apt:
+      ansible.builtin.apt:
         name:
           - apt-transport-https
           - ca-certificates
@@ -30,7 +30,7 @@
         state: present
 
     - name: Install Docker and Docker Compose Plugin
-      apt:
+      ansible.builtin.apt:
         name:
           - docker-ce
           - docker-ce-cli
@@ -45,22 +45,43 @@
         state: started
         enabled: yes
 
+    # --- Infisical CLI Setup ---
+    - name: Download Infisical repository setup script
+      ansible.builtin.get_url:
+        url: https://artifacts-cli.infisical.com/setup.deb.sh
+        dest: /tmp/setup_infisical.sh
+        mode: '0700'
+
+    - name: Configure Infisical apt repository
+      ansible.builtin.command: /tmp/setup_infisical.sh
+      args:
+        # Prevents the script from running again if the repo is already added
+        creates: /etc/apt/sources.list.d/infisical-infisical-cli.list
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+
+    - name: Install Infisical CLI
+      ansible.builtin.apt:
+        name: infisical
+        state: present
+        update_cache: yes
+
     # --- 2. Nginx Setup ---
     - name: Install Nginx and Certbot
-      apt:
+      ansible.builtin.apt:
         name:
           - nginx
         state: present
 
     - name: Ensure snapd is installed (Required for Certbot)
-      apt:
+      ansible.builtin.apt:
         name: snapd
         state: present
 
     - name: Ensure snap core is up to date
-      command: snap install core
-      register: snap_core
-      changed_when: "'already installed' not in snap_core.stdout"
+      community.general.snap:
+        name: core
+        state: present
 
     - name: Refresh snap core
       command: snap refresh core
@@ -116,7 +137,7 @@
 
     # --- Firewall & Security Setup ---
     - name: Ensure UFW is installed
-      apt:
+      ansible.builtin.apt:
         name: ufw
         state: present
 
@@ -143,7 +164,7 @@
         default: deny
 
     - name: Install fail2ban
-      apt:
+      ansible.builtin.apt:
         name: fail2ban
         state: present
 
@@ -176,6 +197,7 @@
         creates: /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
       # If DNS hasn't propagated yet, don't fail the whole playbook
       ignore_errors: yes
+      notify: Reload Nginx
 
   handlers:
     - name: Reload Nginx

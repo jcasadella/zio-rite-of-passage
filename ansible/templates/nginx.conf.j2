@@ -9,7 +9,7 @@ server {
     location / {
         root {{ static_files_path }};
         index index.html index.htm;
-        try_files $uri $uri/ =404;
+        try_files $uri $uri/ /index.html;
     }
 
     # Proxy /api/ requests to the internal Docker backend

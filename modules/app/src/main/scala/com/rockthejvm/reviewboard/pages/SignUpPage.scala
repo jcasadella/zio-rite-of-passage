@@ -68,7 +68,8 @@ object SignUpPage extends FormPage[SignUpFormState]("Sign Up") {
       "text",
       true,
       "Your email",
-      (s, e) => s.copy(email = e, showStatus = false, upstreamStatus = None)
+      (s, e) => s.copy(email = e, showStatus = false, upstreamStatus = None),
+      maybeAutoComplete = Some("username")
     ),
     // an input of type password
     renderInput(
@@ -77,7 +78,8 @@ object SignUpPage extends FormPage[SignUpFormState]("Sign Up") {
       "password",
       true,
       "Your password",
-      (s, p) => s.copy(password = p, showStatus = false, upstreamStatus = None)
+      (s, p) => s.copy(password = p, showStatus = false, upstreamStatus = None),
+      maybeAutoComplete = Some("new-password")
     ),
     // an input of type password
     renderInput(
@@ -89,7 +91,7 @@ object SignUpPage extends FormPage[SignUpFormState]("Sign Up") {
       (s, p) => s.copy(confirmPassword = p, showStatus = false, upstreamStatus = None)
     ),
     button(
-      `type` := "button",
+      `type` := "submit",
       "Sign Up",
       onClick.preventDefault.mapTo(stateVar.now()) --> submitter
     )

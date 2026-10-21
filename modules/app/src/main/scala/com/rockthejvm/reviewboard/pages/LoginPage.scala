@@ -59,7 +59,8 @@ object LoginPage extends FormPage[LoginState]("Log In") {
       "text",
       true,
       "Your email",
-      (s, e) => s.copy(email = e, showStatus = false, upstreamError = None)
+      (s, e) => s.copy(email = e, showStatus = false, upstreamError = None),
+      maybeAutoComplete = Some("username")
     ),
     // an input of type password
     renderInput(
@@ -72,7 +73,7 @@ object LoginPage extends FormPage[LoginState]("Log In") {
       maybeAutoComplete = Some("current-password")
     ),
     button(
-      `type` := "button",
+      `type` := "submit",
       "Log In",
       onClick.preventDefault.mapTo(stateVar.now()) --> submitter
     ),

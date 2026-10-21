@@ -159,6 +159,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 2222
           script: |
+            set -e
             # Navigate to the deployment directory
             cd /opt/reviewboard
             
@@ -170,7 +171,15 @@ jobs:
               --domain="${{ vars.INFISICAL_API_URL }}" \
               --plain \
               --silent)
+            
+            # Validate the token is not empty and not literally 'null'
+            if [ -z "$INFISICAL_TOKEN" ] || [ "$INFISICAL_TOKEN" = "null" ]; then
+              echo "ERROR: Infisical token is empty or invalid. Authentication failed."
+              exit 1
+            fi
+
+            echo "Infisical authentication successful."
 
             docker load -i server.tar
-            
+
             infisical run --domain="${{ vars.INFISICAL_API_URL }}" --projectId="${{ secrets.INFISICAL_PROJECT_ID }}" --env=staging -- docker compose up -d --remove-orphans

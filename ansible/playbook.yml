@@ -123,6 +123,11 @@
         owner: holu
         group: holu
 
+    - name: Check whether the Let's Encrypt certificate already exists
+      ansible.builtin.stat:
+        path: /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem
+      register: letsencrypt_certificate
+
     - name: Deploy Nginx configuration
       template:
         src: templates/nginx.conf.j2
@@ -219,3 +224,4 @@
         state: restarted
     - name: Reinstall Certbot SSL
       command: certbot install --nginx --cert-name {{ domain_name }} --non-interactive --redirect
+      when: letsencrypt_certificate.stat.exists

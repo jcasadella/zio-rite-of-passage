@@ -1,0 +1,39 @@
+#cloud-config
+users:
+  - name: holu
+    groups: users, admin
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - "${user_ssh_pub_local}"
+      - "${user_ssh_pub_github}"
+package_update: true
+package_upgrade: true
+packages:
+  - fail2ban
+  - ufw
+  - curl
+  - ca-certificates
+write_files:
+  - path: /etc/ssh/sshd_config.d/ssh-hardening.conf
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      Port 2222
+      KbdInteractiveAuthentication no
+      ChallengeResponseAuthentication no
+      MaxAuthTries 2
+      AllowTcpForwarding no
+      X11Forwarding no
+      AllowAgentForwarding no
+      AuthorizedKeysFile .ssh/authorized_keys
+      AllowUsers holu
+runcmd:
+# Configure fail2ban bans attackers for 10 minutes after 5 failed logins within 10 minutes
+  - printf "[sshd]\nenabled = true\nport = ssh, 2222\nbanaction = iptables-multiport" > /etc/fail2ban/jail.local
+  - systemctl enable fail2ban
+# Configure Uncomplicated Firewall (ufw)
+  - ufw allow 2222
+  - ufw enable
+# Reboot
+  - reboot

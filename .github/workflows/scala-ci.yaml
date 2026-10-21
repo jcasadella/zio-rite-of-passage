@@ -1,10 +1,12 @@
 name: Scala CI
+run-name: ${{ github.event_name == 'workflow_dispatch' && 'Manual deploy' || 'Scala CI' }}
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -44,7 +46,7 @@ jobs:
 
   deploy-staging:
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: staging
 
@@ -109,6 +111,8 @@ jobs:
       
       - name: Execute Ansible Playbook
         env:
+          SERVER_HOST: ${{ vars.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
           # 1. Start the SSH agent in the background
@@ -119,7 +123,7 @@ jobs:
           
           # 3. Run the playbook (Ansible automatically uses the active SSH agent)
           cd ansible
-          ansible-playbook -i inventory.ini playbook.yml --limit staging
+          ansible-playbook -i "${SERVER_HOST}," playbook.yml -u ${SERVER_USER} -e "ansible_port=2222" -e "env=staging"
 
       # 3. Upload backend and frontend files into staging
       - name: Upload backend files to staging

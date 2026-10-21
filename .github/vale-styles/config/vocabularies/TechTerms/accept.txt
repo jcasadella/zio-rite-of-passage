@@ -5,3 +5,8 @@ ZIO
 sbt
 npm
 Scala.js
+Ansible
+Certbot
+Hetzner
+Infisical
+Nginx

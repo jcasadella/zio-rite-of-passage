@@ -1,0 +1,5 @@
+domain_name: "reviewboard.nopass.eu"
+email: "info@nopass.eu"
+backend_files_path: "/opt/reviewboard"
+static_files_path: "/opt/reviewboard/html"
+backend_port: "4041"

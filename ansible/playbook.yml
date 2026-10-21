@@ -1,9 +1,10 @@
 ---
-- name: Provision Staging Server
-  hosts: staging
+- name: Provision Server
+  hosts: all
   become: yes
   vars_files:
-    - vars.yml
+    # Loads vars file depending on env, default is vars_staging.yml
+    - "vars_{{ env | default('staging') }}.yml"
 
   tasks:
     # --- 1. Docker & Docker Compose Setup ---

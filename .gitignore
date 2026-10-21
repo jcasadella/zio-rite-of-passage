@@ -30,3 +30,4 @@ dist-staging/
 private
 server.tar
 build
+.terraform*

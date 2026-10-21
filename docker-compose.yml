@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres
+    image: postgres:18
     restart: always
     environment:
         POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in your shell environment}
@@ -10,7 +10,7 @@ services:
     volumes:
       - "./sql:/docker-entrypoint-initdb.d"
       # Persistent volume for Postgres data, use `docker compose -v down` to flush data
-      - postgres_data:/var/lib/postgresql/data
+      - /opt/reviewboard/postgres_data:/var/lib/postgresql
 
   server:
     image: rockthejvm-reviewboard-staging:1.0.0

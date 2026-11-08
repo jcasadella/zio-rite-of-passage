@@ -195,7 +195,7 @@ The returned address should match the server IP. Ansible requests a Transport La
 
 ### Step 4. Set the Ansible target
 
-The workflow doesn't use a checked-in inventory file. It passes the staging host directly to Ansible using the `SERVER_HOST` environment variable and the inline-host inventory syntax, which uses a trailing comma: `-i "${SERVER_HOST},"`. The playbook targets all hosts in that inline inventory. GitHub Actions loads `SERVER_SSH_KEY` into its SSH agent before running Ansible.
+The workflow doesn't use a checked-in inventory file. It passes the staging host directly to Ansible using the `SERVER_HOST` environment variable, set from the secret of the same name, and the inline-host inventory syntax, which uses a trailing comma: `-i "${SERVER_HOST},"`. The playbook targets all hosts in that inline inventory. GitHub Actions loads `SERVER_SSH_KEY` into its SSH agent before running Ansible.
 
 To run the playbook locally, set `SERVER_HOST` to the staging IP address or domain and specify your local private key:
 
@@ -214,8 +214,8 @@ In the repository, open **Settings > Environments**, select **New environment**,
 
 | Type | Name | Value |
 | --- | --- | --- |
-| Variable | `SERVER_HOST` | The staging domain or server IP. The workflow uses it as the Ansible target and upload destination. |
 | Variable | `INFISICAL_API_URL` | Your Infisical API URL |
+| Secret | `SERVER_HOST` | The staging domain or server IP. The workflow uses it as the Ansible target and upload destination. Stored as a secret so it's masked in public workflow logs. |
 | Secret | `SERVER_USER` | `holu` |
 | Secret | `SERVER_SSH_KEY` | Contents of `~/.ssh/id_reviewboard-staging-github`, the private key |
 | Secret | `INFISICAL_CLIENT_ID` | Universal Auth client ID |
@@ -224,7 +224,7 @@ In the repository, open **Settings > Environments**, select **New environment**,
 
 In Infisical, make sure the staging environment has all required variables from `docker-compose.yml`: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `DATABASE_JDBC_URL`, `DATABASE_USER`, `DATABASE_PASS`, `JWT_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_SUCCESS_URL`, `STRIPE_CANCEL_URL`, `STRIPE_INVITES_WEBHOOK_SECRET`, `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_BASE_URL`, and `OPENAI_SECRET_KEY`. `JWT_TTL`, `EMAIL_HOST`, and `EMAIL_PORT` are optional. Configure the Universal Auth identity with access to the project and staging environment.
 
-To move deployments to a different server, update `SERVER_HOST` in the `staging` environment. You don't need to change or commit an inventory file. The new value takes effect the next time the workflow runs. Changing the variable alone doesn't start a deployment.
+To move deployments to a different server, update the `SERVER_HOST` secret in the `staging` environment. You don't need to change or commit an inventory file. The new value takes effect the next time the workflow runs. Changing the secret alone doesn't start a deployment.
 
 ### Step 6. Run the staging deployment
 

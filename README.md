@@ -105,12 +105,12 @@ First generate the fast Scala.js output, then start Parcel from the app director
 ```bash
 sbt "app / Compile / fastLinkJS"
 cd modules/app
-npm run start
+npm run dev
 ```
 
 Open the URL printed by Parcel, usually `http://localhost:1234`.
 
-`npm run start` runs:
+`npm run dev` runs:
 
 ```bash
 parcel index.html --no-cache --dist-dir dist --log-level info
